@@ -1,6 +1,4 @@
-﻿Imports MySql.Data.MySqlClient
-
-''' <summary>
+﻿''' <summary>
 ''' Form input/edit Dosen.
 ''' Inherit dari FrmBaseInput dengan validasi email, phone, NIDN, dan FK ke Prodi.
 ''' Kolom database: kd_dosen, kd_prodi, nidn_dosen, nama_dosen, jk_dosen, no_telp_dosen, email_dosen
@@ -80,112 +78,78 @@ Public Class FrmInputDosen
     End Sub
 #End Region
 
+#Region "Override Methods - Save Execution (Repository Pattern)"
+    ''' <summary>
+    ''' Eksekusi simpan menggunakan DosenRepository.
+    ''' </summary>
+    Protected Overrides Function ExecuteSave() As Boolean
+        Dim repo As New DosenRepository()
+        Dim dosen As DosenEntity = MapUItoEntity()
+
+        If IsEditMode Then
+            Return repo.Update(dosen)
+        Else
+            Return repo.Insert(dosen)
+        End If
+    End Function
+
+    ''' <summary>
+    ''' Helper untuk memetakan nilai dari UI ke objek Entity.
+    ''' </summary>
+    Private Function MapUItoEntity() As DosenEntity
+        Dim dosen As New DosenEntity()
+        dosen.Kode = txtKodeDosen.Text.Trim()
+        dosen.KdProdi = If(cmbProdi.SelectedValue?.ToString(), "")
+        dosen.NidnDosen = txtNidnDosen.Text.Trim()
+        dosen.NamaDosen = txtNamaDosen.Text.Trim().ToUpper()
+
+        If cmbJenisKemain.SelectedIndex > 0 Then
+            dosen.JkDosen = cmbJenisKemain.SelectedItem.ToString()
+        End If
+
+        dosen.NoTelpDosen = txtNoTelpDosen.Text.Trim()
+        dosen.EmailDosen = txtEmailDosen.Text.Trim().ToLower()
+
+        Return dosen
+    End Function
+#End Region
+
 #Region "Override Methods - Validation"
     ''' <summary>
     ''' Validasi input sebelum save.
     ''' Menggunakan DosenEntity untuk validasi dasar (OOP),
-    ''' lalu validasi database untuk cek duplikat.
+    ''' lalu validasi database untuk cek duplikat melalui Base Class.
     ''' </summary>
     Protected Overrides Function ValidateInput() As Boolean
-        Dim dosen As New DosenEntity()
+        Dim dosen As DosenEntity
 
         Try
-            dosen.Kode = txtKodeDosen.Text.Trim()
-            dosen.KdProdi = If(cmbProdi.SelectedValue?.ToString(), "")
-            dosen.NidnDosen = txtNidnDosen.Text.Trim()
-            dosen.NamaDosen = txtNamaDosen.Text.Trim()
-
-            If cmbJenisKemain.SelectedIndex > 0 Then
-                dosen.JkDosen = cmbJenisKemain.SelectedItem.ToString()
-            Else
-                dosen.JkDosen = ""
-            End If
-
-            dosen.NoTelpDosen = txtNoTelpDosen.Text.Trim()
-            dosen.EmailDosen = txtEmailDosen.Text.Trim()
-
+            dosen = MapUItoEntity()
         Catch ex As ArgumentException
             ShowError(ex.Message)
             Return False
         End Try
 
-        ' Validasi entity menggunakan method IsValid()
+        ' Validasi entity menggunakan method IsValid() (Pilar Encapsulation)
         If Not dosen.IsValid() Then
             ShowError(String.Join(vbCrLf, dosen.GetValidationErrors()))
             Return False
         End If
 
         ' ===== VALIDASI DATABASE (CEK DUPLIKAT) =====
-        ' Validasi duplikat NIDN
+        ' Tetap menggunakan helper di FrmBaseInput karena bersifat infrastruktur pencarian
         If Not ValidateNoDuplicate("nidn_dosen", txtNidnDosen.Text.Trim(), "NIDN") Then
             txtNidnDosen.Focus()
             Return False
-        End If
-
-        ' Validasi duplikat nomor telepon (jika diisi)
-        Dim noTelp As String = txtNoTelpDosen.Text.Trim()
-        If Not String.IsNullOrEmpty(noTelp) Then
-            If Not ValidateNoDuplicate("no_telp_dosen", noTelp, "Nomor Telepon") Then
-                txtNoTelpDosen.Focus()
-                Return False
-            End If
-        End If
-
-        ' Validasi duplikat email (jika diisi)
-        If Not String.IsNullOrWhiteSpace(txtEmailDosen.Text) Then
-            If Not ValidateNoDuplicate("email_dosen", txtEmailDosen.Text.Trim(), "Email") Then
-                txtEmailDosen.Focus()
-                Return False
-            End If
         End If
 
         Return True
     End Function
 #End Region
 
-#Region "Override Methods - Query"
-    ''' <summary>
-    ''' Query INSERT untuk Dosen.
-    ''' Kolom: kd_dosen, kd_prodi, nidn_dosen, nama_dosen, jk_dosen, no_telp_dosen, email_dosen
-    ''' </summary>
-    Protected Overrides Function GetInsertQuery() As String
-        Return "INSERT INTO tbl_dosen (kd_dosen, kd_prodi, nidn_dosen, nama_dosen, jk_dosen, no_telp_dosen, email_dosen) " &
-               "VALUES (@kd_dosen, @kd_prodi, @nidn_dosen, @nama_dosen, @jk_dosen, @no_telp_dosen, @email_dosen)"
-    End Function
-
-    ''' <summary>
-    ''' Query UPDATE untuk Dosen.
-    ''' </summary>
-    Protected Overrides Function GetUpdateQuery() As String
-        Return "UPDATE tbl_dosen SET kd_prodi = @kd_prodi, nidn_dosen = @nidn_dosen, nama_dosen = @nama_dosen, " &
-               "jk_dosen = @jk_dosen, no_telp_dosen = @no_telp_dosen, email_dosen = @email_dosen " &
-               "WHERE kd_dosen = @kd_dosen"
-    End Function
-
-    ''' <summary>
-    ''' Parameter untuk query INSERT/UPDATE.
-    ''' </summary>
-    Protected Overrides Function GetQueryParameters() As MySqlParameter()
-        Dim noTelp As Object = DBNull.Value
-        If Not String.IsNullOrWhiteSpace(txtNoTelpDosen.Text) Then
-            noTelp = txtNoTelpDosen.Text.Trim()
-        End If
-
-        Dim gender As String = ""
-        If cmbJenisKemain.SelectedIndex > 0 Then
-            gender = cmbJenisKemain.SelectedItem.ToString()
-        End If
-
-        Return {
-            New MySqlParameter("@kd_dosen", txtKodeDosen.Text.Trim()),
-            New MySqlParameter("@kd_prodi", If(cmbProdi.SelectedValue, DBNull.Value)),
-            New MySqlParameter("@nidn_dosen", txtNidnDosen.Text.Trim()),
-            New MySqlParameter("@nama_dosen", txtNamaDosen.Text.Trim().ToUpper()),
-            New MySqlParameter("@jk_dosen", gender),
-            New MySqlParameter("@no_telp_dosen", noTelp),
-            New MySqlParameter("@email_dosen", If(String.IsNullOrWhiteSpace(txtEmailDosen.Text), DBNull.Value, txtEmailDosen.Text.Trim().ToLower()))
-        }
-    End Function
+#Region "Override Methods - Query (Deprecated/Removed in favor of Repository)"
+    ' Logika Query SQL telah dipindahkan ke DosenRepository.vb
+    ' Mengapa? Sesuai prinsip Separation of Concerns (Pemisahan Tanggung Jawab)
 #End Region
 
 #Region "Override Methods - Form Reset"

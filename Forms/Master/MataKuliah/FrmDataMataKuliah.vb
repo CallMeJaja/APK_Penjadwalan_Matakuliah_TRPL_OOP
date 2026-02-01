@@ -7,24 +7,36 @@
 Public Class FrmDataMataKuliah
 
 #Region "Override Properties"
+    ''' <summary>
+    ''' Nama tabel mata kuliah di database.
+    ''' </summary>
     Protected Overrides ReadOnly Property TableName As String
         Get
             Return "tbl_matakuliah"
         End Get
     End Property
 
+    ''' <summary>
+    ''' Primary key tabel mata kuliah.
+    ''' </summary>
     Protected Overrides ReadOnly Property PrimaryKey As String
         Get
             Return "kd_matkul"
         End Get
     End Property
 
+    ''' <summary>
+    ''' Nama modul mata kuliah.
+    ''' </summary>
     Protected Overrides ReadOnly Property ModuleName As String
         Get
             Return "Mata Kuliah"
         End Get
     End Property
 
+    ''' <summary>
+    ''' Kolom pencarian untuk mata kuliah.
+    ''' </summary>
     Protected Overrides ReadOnly Property SearchColumns As String()
         Get
             Return {"kd_matkul", "nama_matkul"}
@@ -32,20 +44,25 @@ Public Class FrmDataMataKuliah
     End Property
 #End Region
 
-#Region "Override Methods"
+#Region "Override Methods - Data Source (Repository Pattern)"
     ''' <summary>
-    ''' Query SELECT dengan JOIN ke tbl_prodi.
-    ''' Kolom: kd_matkul, nama_matkul, sks_matkul, teori_matkul, praktek_matkul, semester_matkul, kd_prodi, tipe_semester
+    ''' Mengambil data melalui MatakuliahRepository.
     ''' </summary>
-    Protected Overrides Function GetSelectQuery() As String
-        Return "SELECT m.kd_matkul, m.nama_matkul, p.nama_prodi, " &
-               "m.teori_matkul, m.praktek_matkul, m.sks_matkul, m.semester_matkul, " &
-               "CASE WHEN (m.semester_matkul % 2) != 0 THEN 'Ganjil' ELSE 'Genap' END AS tipe_semester " &
-               "FROM tbl_matakuliah m " &
-               "LEFT JOIN tbl_prodi p ON m.kd_prodi = p.kd_prodi " &
-               "ORDER BY m.kd_matkul"
+    Protected Overrides Function GetDataTableFromSource() As DataTable
+        Dim repo As New MatakuliahRepository()
+        Return repo.GetAllDataTable()
     End Function
 
+    ''' <summary>
+    ''' Eksekusi hapus menggunakan Repository.
+    ''' </summary>
+    Protected Overrides Function ExecuteDelete(recordId As String) As Boolean
+        Dim repo As New MatakuliahRepository()
+        Return repo.Delete(recordId)
+    End Function
+#End Region
+
+#Region "Override Methods"
     ''' <summary>
     ''' Inisialisasi filter ComboBox untuk Prodi, Tipe Semester, dan Semester.
     ''' </summary>
@@ -119,6 +136,9 @@ Public Class FrmDataMataKuliah
         End With
     End Sub
 
+    ''' <summary>
+    ''' Reset filter Prodi, Tipe Semester, dan Semester serta reload data.
+    ''' </summary>
     Protected Overrides Sub ResetFiltersAndReload()
         If cmbFilterProdi.Items.Count > 0 Then cmbFilterProdi.SelectedIndex = 0
         If cmbFilterTipeSemester.Items.Count > 0 Then cmbFilterTipeSemester.SelectedIndex = 0

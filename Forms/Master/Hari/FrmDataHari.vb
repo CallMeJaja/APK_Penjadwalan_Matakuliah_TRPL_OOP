@@ -7,29 +7,59 @@
 Public Class FrmDataHari
 
 #Region "Override Properties"
+    ''' <summary>
+    ''' Nama tabel hari di database.
+    ''' </summary>
     Protected Overrides ReadOnly Property TableName As String
         Get
             Return "tbl_hari"
         End Get
     End Property
 
+    ''' <summary>
+    ''' Primary key tabel hari.
+    ''' </summary>
     Protected Overrides ReadOnly Property PrimaryKey As String
         Get
             Return "id_hari"
         End Get
     End Property
 
+    ''' <summary>
+    ''' Nama modul hari.
+    ''' </summary>
     Protected Overrides ReadOnly Property ModuleName As String
         Get
             Return "Hari"
         End Get
     End Property
 
+    ''' <summary>
+    ''' Kolom pencarian untuk hari.
+    ''' </summary>
     Protected Overrides ReadOnly Property SearchColumns As String()
         Get
             Return {"id_hari", "nama_hari"}
         End Get
     End Property
+#End Region
+
+#Region "Override Methods - Data Source (Repository Pattern)"
+    ''' <summary>
+    ''' Mengambil data melalui HariRepository.
+    ''' </summary>
+    Protected Overrides Function GetDataTableFromSource() As DataTable
+        Dim repo As New HariRepository()
+        Return repo.GetAllDataTable()
+    End Function
+
+    ''' <summary>
+    ''' Eksekusi hapus menggunakan Repository.
+    ''' </summary>
+    Protected Overrides Function ExecuteDelete(recordId As String) As Boolean
+        Dim repo As New HariRepository()
+        Return repo.Delete(recordId)
+    End Function
 #End Region
 
 #Region "Override Methods"

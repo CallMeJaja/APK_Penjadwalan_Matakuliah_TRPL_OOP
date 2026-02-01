@@ -1,5 +1,7 @@
-﻿Imports MySql.Data.MySqlClient
-
+﻿''' <summary>
+''' Form Lookup untuk memilih data dari tabel database mana pun secara dinamis.
+''' Mendukung pencarian teks pada beberapa kolom sekaligus.
+''' </summary>
 Public Class FrmLookup
     Private _sourceTable As DataTable
     Private _filteredView As DataView
@@ -38,6 +40,10 @@ Public Class FrmLookup
         End If
     End Sub
 
+    ''' <summary>
+    ''' Memuat data dari database ke GridView berdasarkan query dan parameter.
+    ''' </summary>
+    ''' <param name="query">Query SQL yang akan dijalankan.</param>
     Private Sub LoadData(query As String)
         Try
             If _params IsNot Nothing AndAlso _params.Length > 0 Then
@@ -68,6 +74,9 @@ Public Class FrmLookup
         End Try
     End Sub
 
+    ''' <summary>
+    ''' Event handler untuk pencarian real-time saat teks pencarian berubah.
+    ''' </summary>
     Private Sub txtCari_TextChanged(sender As Object, e As EventArgs) Handles txtCari.TextChanged
         If _filteredView Is Nothing Then Exit Sub
 
@@ -84,10 +93,16 @@ Public Class FrmLookup
         End If
     End Sub
 
+    ''' <summary>
+    ''' Event handler untuk tombol cari.
+    ''' </summary>
     Private Sub btnCari_Click(sender As Object, e As EventArgs) Handles btnCari.Click
         txtCari_TextChanged(Nothing, Nothing)
     End Sub
 
+    ''' <summary>
+    ''' Mengambil data yang dipilih dan menutup form dengan hasil DialogResult.OK.
+    ''' </summary>
     Private Sub PilihData()
         If DataGridView1.CurrentRow IsNot Nothing Then
             Dim row As DataRowView = CType(DataGridView1.CurrentRow.DataBoundItem, DataRowView)
@@ -100,10 +115,16 @@ Public Class FrmLookup
         End If
     End Sub
 
+    ''' <summary>
+    ''' Event handler untuk double-click pada grid untuk memilih data.
+    ''' </summary>
     Private Sub DataGridView1_DoubleClick(sender As Object, e As EventArgs) Handles DataGridView1.DoubleClick
         PilihData()
     End Sub
 
+    ''' <summary>
+    ''' Event handler untuk menekan tombol Enter pada grid untuk memilih data.
+    ''' </summary>
     Private Sub DataGridView1_KeyDown(sender As Object, e As KeyEventArgs) Handles DataGridView1.KeyDown
         If e.KeyCode = Keys.Enter Then
             PilihData()

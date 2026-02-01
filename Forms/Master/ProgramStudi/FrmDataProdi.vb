@@ -7,24 +7,36 @@
 Public Class FrmDataProdi
 
 #Region "Override Properties"
+    ''' <summary>
+    ''' Nama tabel prodi di database.
+    ''' </summary>
     Protected Overrides ReadOnly Property TableName As String
         Get
             Return "tbl_prodi"
         End Get
     End Property
 
+    ''' <summary>
+    ''' Primary key tabel prodi.
+    ''' </summary>
     Protected Overrides ReadOnly Property PrimaryKey As String
         Get
             Return "kd_prodi"
         End Get
     End Property
 
+    ''' <summary>
+    ''' Nama modul prodi.
+    ''' </summary>
     Protected Overrides ReadOnly Property ModuleName As String
         Get
             Return "Program Studi"
         End Get
     End Property
 
+    ''' <summary>
+    ''' Kolom pencarian untuk prodi.
+    ''' </summary>
     Protected Overrides ReadOnly Property SearchColumns As String()
         Get
             Return {"kd_prodi", "nama_prodi"}
@@ -32,13 +44,25 @@ Public Class FrmDataProdi
     End Property
 #End Region
 
-#Region "Override Methods"
+#Region "Override Methods - Data Source (Repository Pattern)"
     ''' <summary>
-    ''' Query SELECT custom untuk sorting berdasarkan Kode Prodi.
+    ''' Mengambil data melalui ProdiRepository.
     ''' </summary>
-    Protected Overrides Function GetSelectQuery() As String
-        Return $"SELECT * FROM {TableName} ORDER BY kd_prodi"
+    Protected Overrides Function GetDataTableFromSource() As DataTable
+        Dim repo As New ProdiRepository()
+        Return repo.GetAllDataTable()
     End Function
+
+    ''' <summary>
+    ''' Eksekusi hapus menggunakan Repository.
+    ''' </summary>
+    Protected Overrides Function ExecuteDelete(recordId As String) As Boolean
+        Dim repo As New ProdiRepository()
+        Return repo.Delete(recordId)
+    End Function
+#End Region
+
+#Region "Override Methods"
 
     ''' <summary>
     ''' Konfigurasi kolom DataGridView untuk Program Studi.

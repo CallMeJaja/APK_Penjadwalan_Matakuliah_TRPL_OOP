@@ -30,25 +30,56 @@ Public Class JadwalEntity
     ''' Kode ruangan sebagai Foreign Key, maksimal 5 karakter.
     ''' </summary>
     Private _kdRuangan As String = ""
+
+    ''' <summary>
+    ''' ID Tahun Akademik / Tahun Akademik sebagai Foreign Key.
+    ''' </summary>
+    Private _tahunAkademik As String = ""
+
+    ''' <summary>
+    ''' Data tambahan dari View (Optional)
+    ''' </summary>
+    Private _kdDosen As String = ""
+    Private _kdProdi As String = ""
 #End Region
 
 #Region "Properties"
     ''' <summary>
     ''' Kode Pengampu sebagai Primary Key dan Foreign Key dengan maksimal 7 karakter.
     ''' </summary>
-    ''' <returns>String berisi kode pengampu</returns>
     Public Overrides Property Kode As String
         Get
             Return _kdPengampu
         End Get
         Set(value As String)
-            If String.IsNullOrWhiteSpace(value) Then
-                Throw New ArgumentException("Pengampu wajib dipilih!")
-            End If
-            If value.Length > 7 Then
+            If value IsNot Nothing AndAlso value.Length > 7 Then
                 Throw New ArgumentException("Kode Pengampu maksimal 7 karakter!")
             End If
-            _kdPengampu = value.Trim()
+            _kdPengampu = value
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' Alias untuk Kode (kd_pengampu) untuk kompatibilitas UI.
+    ''' </summary>
+    Public Property IdJadwal As String
+        Get
+            Return Kode
+        End Get
+        Set(value As String)
+            Kode = value
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' Alias untuk Kode (kd_pengampu) untuk kompatibilitas UI.
+    ''' </summary>
+    Public Property KdPengampu As String
+        Get
+            Return Kode
+        End Get
+        Set(value As String)
+            Kode = value
         End Set
     End Property
 
@@ -116,6 +147,63 @@ Public Class JadwalEntity
                 Throw New ArgumentException("Kode Ruangan maksimal 5 karakter!")
             End If
             _kdRuangan = value.Trim()
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' Alias untuk KdRuangan untuk kompatibilitas UI.
+    ''' </summary>
+    Public Property IdRuangan As String
+        Get
+            Return KdRuangan
+        End Get
+        Set(value As String)
+            KdRuangan = value
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' ID Tahun Akademik / Tahun Akademik sebagai Foreign Key.
+    ''' </summary>
+    Public Property IdTahunAkademik As String
+        Get
+            Return _tahunAkademik
+        End Get
+        Set(value As String)
+            _tahunAkademik = value
+        End Set
+    End Property
+
+    Public Property TahunAkademik As String
+        Get
+            Return _tahunAkademik
+        End Get
+        Set(value As String)
+            _tahunAkademik = value
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' Kode Dosen (dari view)
+    ''' </summary>
+    Public Property KdDosen As String
+        Get
+            Return _kdDosen
+        End Get
+        Set(value As String)
+            _kdDosen = value
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' Kode Prodi (dari view)
+    ''' </summary>
+    Public Property KdProdi As String
+        Get
+            Return _kdProdi
+        End Get
+        Set(value As String)
+            _kdProdi = value
         End Set
     End Property
 #End Region

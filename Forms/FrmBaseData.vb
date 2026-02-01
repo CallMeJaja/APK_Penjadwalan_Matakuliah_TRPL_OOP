@@ -179,8 +179,8 @@ Public Class FrmBaseData
             Cursor = Cursors.WaitCursor
             slStatus.Text = "Memuat data..."
 
-            Dim query As String = GetSelectQuery()
-            _dataSource = ModDbCrud.LoadData(query)
+            ' Ambil data dari source (Default: GetSelectQuery() atau Override: Repository)
+            _dataSource = GetDataTableFromSource()
 
             If _dataSource IsNot Nothing Then
                 _totalRecords = _dataSource.Rows.Count
@@ -200,6 +200,15 @@ Public Class FrmBaseData
             Cursor = Cursors.Default
         End Try
     End Sub
+
+    ''' <summary>
+    ''' Mendapatkan data dari sumber (DataTable).
+    ''' Secara default menjalankan GetSelectQuery().
+    ''' Override di child class untuk menggunakan Repository.GetAllDataTable().
+    ''' </summary>
+    Protected Overridable Function GetDataTableFromSource() As DataTable
+        Return ModDbCrud.LoadData(GetSelectQuery())
+    End Function
 
     ''' <summary>
     ''' Query SELECT utama. Override untuk custom query (JOIN, dll).
@@ -261,7 +270,8 @@ Public Class FrmBaseData
         For i As Integer = 0 To dgvData.Rows.Count - 1
             If Not dgvData.Rows(i).IsNewRow Then
                 Dim rowNum As Integer = ((_currentPage - 1) * _pageSize) + i + 1
-                If _pageSize = 0 Then rowNum = i + 1 ' Jika show all
+                ' Jika show all
+                If _pageSize = 0 Then rowNum = i + 1
                 dgvData.Rows(i).Cells("No").Value = rowNum
             End If
         Next
@@ -478,10 +488,7 @@ Public Class FrmBaseData
     ''' </summary>
     Protected Overridable Sub PerformDelete(recordId As String)
         Try
-            Dim query As String = $"DELETE FROM {TableName} WHERE {PrimaryKey} = @id"
-            Dim param As New MySqlParameter("@id", recordId)
-
-            If ExecuteQuery(query, param) Then
+            If ExecuteDelete(recordId) Then
                 ShowSuccess($"Data {ModuleName} berhasil dihapus!")
                 LoadData()
             End If
@@ -489,6 +496,17 @@ Public Class FrmBaseData
             ShowError($"Gagal menghapus data: {ex.Message}")
         End Try
     End Sub
+
+    ''' <summary>
+    ''' Inti dari proses penghapusan data.
+    ''' Secara default menggunakan query DELETE manual (Backward Compatibility).
+    ''' Override di child class untuk menggunakan Repository.Delete().
+    ''' </summary>
+    Protected Overridable Function ExecuteDelete(recordId As String) As Boolean
+        Dim query As String = $"DELETE FROM {TableName} WHERE {PrimaryKey} = @id"
+        Dim param As New MySqlParameter("@id", recordId)
+        Return ExecuteQuery(query, param)
+    End Function
 
     ''' <summary>
     ''' Buka form input. Override untuk custom input form.

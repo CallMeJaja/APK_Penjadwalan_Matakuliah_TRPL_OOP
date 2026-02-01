@@ -7,29 +7,59 @@
 Public Class FrmDataRuang
 
 #Region "Override Properties"
+    ''' <summary>
+    ''' Nama tabel ruangan di database.
+    ''' </summary>
     Protected Overrides ReadOnly Property TableName As String
         Get
             Return "tbl_ruangkelas"
         End Get
     End Property
 
+    ''' <summary>
+    ''' Primary key tabel ruangan.
+    ''' </summary>
     Protected Overrides ReadOnly Property PrimaryKey As String
         Get
             Return "kd_ruangan"
         End Get
     End Property
 
+    ''' <summary>
+    ''' Nama modul ruangan.
+    ''' </summary>
     Protected Overrides ReadOnly Property ModuleName As String
         Get
             Return "Ruang Kelas"
         End Get
     End Property
 
+    ''' <summary>
+    ''' Kolom pencarian untuk ruangan.
+    ''' </summary>
     Protected Overrides ReadOnly Property SearchColumns As String()
         Get
             Return {"kd_ruangan", "nama_ruangan"}
         End Get
     End Property
+#End Region
+
+#Region "Override Methods - Data Source (Repository Pattern)"
+    ''' <summary>
+    ''' Mengambil data melalui RuangkelasRepository.
+    ''' </summary>
+    Protected Overrides Function GetDataTableFromSource() As DataTable
+        Dim repo As New RuangkelasRepository()
+        Return repo.GetAllDataTable()
+    End Function
+
+    ''' <summary>
+    ''' Eksekusi hapus menggunakan Repository.
+    ''' </summary>
+    Protected Overrides Function ExecuteDelete(recordId As String) As Boolean
+        Dim repo As New RuangkelasRepository()
+        Return repo.Delete(recordId)
+    End Function
 #End Region
 
 #Region "Override Methods"

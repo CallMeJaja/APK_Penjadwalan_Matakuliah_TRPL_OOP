@@ -3,52 +3,75 @@
 Public Class FrmDataPengampuMataKuliah
     Inherits FrmBaseData
 
+    ''' <summary>
+    ''' Nama tabel dosen pengampu di database.
+    ''' </summary>
     Protected Overrides ReadOnly Property TableName As String
         Get
             Return "tbl_dosen_pengampu_matkul"
         End Get
     End Property
 
+    ''' <summary>
+    ''' Primary key tabel dosen pengampu.
+    ''' </summary>
     Protected Overrides ReadOnly Property PrimaryKey As String
         Get
             Return "kd_pengampu"
         End Get
     End Property
 
+    ''' <summary>
+    ''' Nama modul dosen pengampu.
+    ''' </summary>
     Protected Overrides ReadOnly Property ModuleName As String
         Get
             Return "Pengampu Mata Kuliah"
         End Get
     End Property
 
+    ''' <summary>
+    ''' Kolom pencarian untuk dosen pengampu.
+    ''' </summary>
     Protected Overrides ReadOnly Property SearchColumns As String()
         Get
             Return {"kd_pengampu", "nama_dosen", "nama_matkul", "nama_kelas", "tahun_akademik"}
         End Get
     End Property
     
-    Protected Overrides Function GetSelectQuery() As String
-        Dim query As String = "SELECT p.kd_pengampu, d.kd_dosen, d.nidn_dosen, d.nama_dosen, pr.nama_prodi, " &
-                              "m.kd_matkul, m.nama_matkul, m.sks_matkul, m.teori_matkul, m.praktek_matkul, " &
-                              "m.semester_matkul, p.tahun_akademik, " &
-                              "CASE WHEN (m.semester_matkul % 2) != 0 THEN 'Ganjil' ELSE 'Genap' END AS tipe_semester, " &
-                              "p.nama_kelas, d.kd_prodi " &
-                              "FROM tbl_dosen_pengampu_matkul p " &
-                              "JOIN tbl_dosen d ON p.kd_dosen = d.kd_dosen " &
-                              "JOIN tbl_matakuliah m ON p.kd_matkul = m.kd_matkul " &
-                              "JOIN tbl_prodi pr ON d.kd_prodi = pr.kd_prodi "
-
-        Return query & "ORDER BY p.tahun_akademik DESC, d.nama_dosen ASC"
+#Region "Override Methods - Data Source (Repository Pattern)"
+    ''' <summary>
+    ''' Mengambil data melalui DosenPengampuRepository.
+    ''' </summary>
+    Protected Overrides Function GetDataTableFromSource() As DataTable
+        Dim repo As New DosenPengampuRepository()
+        Return repo.GetAllDataTable()
     End Function
 
+    ''' <summary>
+    ''' Eksekusi hapus menggunakan Repository.
+    ''' </summary>
+    Protected Overrides Function ExecuteDelete(recordId As String) As Boolean
+        Dim repo As New DosenPengampuRepository()
+        Return repo.Delete(recordId)
+    End Function
+#End Region
+
+#Region "Override Methods"
+
+    ''' <summary>
+    ''' Konfigurasi kolom DataGridView untuk Pengampu Mata Kuliah.
+    ''' </summary>
     Protected Overrides Sub ConfigureGridColumns()
         MyBase.ConfigureGridColumns()
+        ' ... rest of code unchanged ...
         With dgvData
             If .Columns.Contains("kd_pengampu") Then
                 .Columns("kd_pengampu").HeaderText = "Kode"
                 .Columns("kd_pengampu").Width = 80
             End If
 
+            ' ... rest of columns ...
             If .Columns.Contains("kd_dosen") Then
                 .Columns("kd_dosen").HeaderText = "ID Dosen"
                 .Columns("kd_dosen").Width = 80
@@ -118,8 +141,9 @@ Public Class FrmDataPengampuMataKuliah
         End With
     End Sub
 
-
-
+    ''' <summary>
+    ''' Inisialisasi filter ComboBox untuk Prodi dan Tipe Semester.
+    ''' </summary>
     Protected Overrides Sub InitializeFilters()
         IsiComboBox(cmbFilterProdi, "SELECT kd_prodi, nama_prodi FROM tbl_prodi ORDER BY nama_prodi",
                     "nama_prodi", "kd_prodi", "-- Semua Prodi --")
@@ -181,6 +205,9 @@ Public Class FrmDataPengampuMataKuliah
         AutoWidthDropDown(cmbFilterSemester)
     End Sub
 
+    ''' <summary>
+    ''' Membangun ekspresi filter untuk DataView.
+    ''' </summary>
     Protected Overrides Function BuildFilterExpression() As String
         Dim filters As New List(Of String)
 
@@ -206,6 +233,9 @@ Public Class FrmDataPengampuMataKuliah
         Return String.Join(" AND ", filters)
     End Function
 
+    ''' <summary>
+    ''' Reset filter dan reload data.
+    ''' </summary>
     Protected Overrides Sub ResetFiltersAndReload()
         If cmbFilterProdi.Items.Count > 0 Then cmbFilterProdi.SelectedIndex = 0
         If cmbFilterTipeSemester.Items.Count > 0 Then cmbFilterTipeSemester.SelectedIndex = 0
@@ -214,10 +244,16 @@ Public Class FrmDataPengampuMataKuliah
         MyBase.ResetFiltersAndReload()
     End Sub
 
+    ''' <summary>
+    ''' Buat instance form input Pengampu.
+    ''' </summary>
     Protected Overrides Function CreateInputForm() As FrmBaseInput
         Return New FrmInputPengampuMataKuliah()
     End Function
 
+    ''' <summary>
+    ''' Validasi sebelum hapus: cek keterhubungan dengan jadwal.
+    ''' </summary>
     Protected Overrides Function ValidateBeforeDelete(recordId As String) As Boolean
         If HasChildRecords("tbl_jadwal_matkul", "kd_pengampu", recordId) Then
             ShowWarning("Data Pengampu tidak dapat dihapus karena sudah ada Jadwal yang terkait!")
@@ -225,4 +261,5 @@ Public Class FrmDataPengampuMataKuliah
         End If
         Return True
     End Function
+#End Region
 End Class

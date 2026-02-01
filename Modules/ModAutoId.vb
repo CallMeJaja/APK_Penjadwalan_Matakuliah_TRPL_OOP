@@ -95,7 +95,8 @@ Module ModAutoId
             Using cmd As New MySqlCommand(query, Conn)
                 Dim result = cmd.ExecuteScalar()
 
-                Dim nextNumber As Integer = 130001 ' Default pertama
+                ' Default pertama
+                Dim nextNumber As Integer = 130001
 
                 If result IsNot Nothing AndAlso Not IsDBNull(result) Then
                     Dim lastNumber As Integer = Convert.ToInt32(result)

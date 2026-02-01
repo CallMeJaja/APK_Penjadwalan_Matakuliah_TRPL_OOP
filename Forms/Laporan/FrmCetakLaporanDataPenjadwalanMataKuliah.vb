@@ -68,6 +68,9 @@ Public Class FrmCetakLaporanDataPenjadwalanMataKuliah
         End Try
     End Sub
 
+    ''' <summary>
+    ''' Mengisi pilihan nama semester (Ganjil/Genap) ke ComboBox.
+    ''' </summary>
     Private Sub IsiNamaSemester()
         cmbNamaSemester.Items.Clear()
         cmbNamaSemester.Items.Add("--- PILIH NAMA SEMESTER ---")
@@ -76,6 +79,9 @@ Public Class FrmCetakLaporanDataPenjadwalanMataKuliah
         cmbNamaSemester.SelectedIndex = 0
     End Sub
 
+    ''' <summary>
+    ''' Mengisi pilihan jenis kelas (Reguler/Karyawan) ke ComboBox.
+    ''' </summary>
     Private Sub IsiJenisKelas()
         cmbJenisKelas.Items.Clear()
         cmbJenisKelas.Items.Add("--- PILIH JENIS KELAS---")
@@ -84,6 +90,9 @@ Public Class FrmCetakLaporanDataPenjadwalanMataKuliah
         cmbJenisKelas.SelectedIndex = 0
     End Sub
 
+    ''' <summary>
+    ''' Event handler saat form dimuat.
+    ''' </summary>
     Private Sub FrmCetakLaporanDataPenjadwalanMataKuliah_Load(sender As Object, e As EventArgs) Handles Me.Load
         IsiComboProdi()
         IsiComboTA()
@@ -91,6 +100,10 @@ Public Class FrmCetakLaporanDataPenjadwalanMataKuliah
         IsiNamaSemester()
     End Sub
 
+    ''' <summary>
+    ''' Memvalidasi bahwa semua filter pencarian telah dipilih.
+    ''' </summary>
+    ''' <returns>True jika valid, False jika ada filter yang belum dipilih.</returns>
     Private Function ValidasiInput() As Boolean
         If cmbProdi.SelectedIndex = 0 Or cmbTahunAkademik.SelectedIndex = 0 Or
            cmbNamaSemester.SelectedIndex = 0 Or cmbJenisKelas.SelectedIndex = 0 Then
@@ -100,6 +113,9 @@ Public Class FrmCetakLaporanDataPenjadwalanMataKuliah
         Return True
     End Function
 
+    ''' <summary>
+    ''' Event handler untuk proses cetak laporan berdasarkan filter yang dipilih.
+    ''' </summary>
     Private Sub btnCetak_Click(sender As Object, e As EventArgs) Handles btnCetak.Click
         Try
             If Not ValidasiInput() Then Exit Sub
@@ -162,6 +178,9 @@ Public Class FrmCetakLaporanDataPenjadwalanMataKuliah
         End Try
     End Sub
 
+    ''' <summary>
+    ''' Event handler untuk menutup form.
+    ''' </summary>
     Private Sub BtnKeluar_Click(sender As Object, e As EventArgs)
         Me.Close()
     End Sub

@@ -161,7 +161,10 @@ Public Class FrmInputMataKuliah
 
 #Region "SKS Calculation"
     Private Const MENIT_PER_SKS_TEORI As Integer = 50
-    Private Const MENIT_PER_SKS_PRAKTEK As Integer = 170 ' User specified: 170 menit per SKS praktek
+    ''' <summary>
+    ''' SKS Praktek bernilai 170 menit.
+    ''' </summary>
+    Private Const MENIT_PER_SKS_PRAKTEK As Integer = 170
 
     ''' <summary>
     ''' Event handler untuk perubahan nilai SKS.
@@ -197,32 +200,56 @@ Public Class FrmInputMataKuliah
     End Sub
 #End Region
 
+#Region "Override Methods - Save Execution (Repository Pattern)"
+    ''' <summary>
+    ''' Eksekusi simpan menggunakan MatakuliahRepository.
+    ''' </summary>
+    Protected Overrides Function ExecuteSave() As Boolean
+        Dim repo As New MatakuliahRepository()
+        Dim matkul As MatakuliahEntity = MapUItoEntity()
+
+        If IsEditMode Then
+            Return repo.Update(matkul)
+        Else
+            Return repo.Insert(matkul)
+        End If
+    End Function
+
+    ''' <summary>
+    ''' Helper untuk memetakan nilai dari UI ke objek Entity.
+    ''' </summary>
+    Private Function MapUItoEntity() As MatakuliahEntity
+        Dim matkul As New MatakuliahEntity()
+        matkul.Kode = txtKodeMataKuliah.Text.Trim().ToUpper()
+        matkul.NamaMatkul = txtNamaMataKuliah.Text.Trim().ToUpper()
+        matkul.TeoriMatkul = CInt(nudSksTeori.Value)
+        matkul.PraktekMatkul = CInt(nudSksPraktek.Value)
+
+        If cmbSemester.SelectedIndex > 0 Then
+            Dim semester As Integer = 0
+            If Integer.TryParse(cmbSemester.SelectedItem.ToString(), semester) Then
+                matkul.SemesterMatkul = semester
+            End If
+        End If
+
+        If IsComboBoxSelected(cmbProdi) Then
+            matkul.KdProdi = cmbProdi.SelectedValue?.ToString()
+        End If
+
+        Return matkul
+    End Function
+#End Region
+
 #Region "Override Methods - Validation"
     ''' <summary>
     ''' Validasi input sebelum save.
-    ''' Menggunakan MatakuliahEntity untuk validasi dasar (OOP),
-    ''' lalu validasi database untuk cek duplikat.
+    ''' Menggunakan MatakuliahEntity untuk validasi dasar (OOP).
     ''' </summary>
     Protected Overrides Function ValidateInput() As Boolean
-        Dim matkul As New MatakuliahEntity()
+        Dim matkul As MatakuliahEntity
 
         Try
-            matkul.Kode = txtKodeMataKuliah.Text.Trim()
-            matkul.NamaMatkul = txtNamaMataKuliah.Text.Trim()
-            matkul.TeoriMatkul = CInt(nudSksTeori.Value)
-            matkul.PraktekMatkul = CInt(nudSksPraktek.Value)
-
-            If cmbSemester.SelectedIndex > 0 Then
-                Dim semester As Integer = 0
-                If Integer.TryParse(cmbSemester.SelectedItem.ToString(), semester) Then
-                    matkul.SemesterMatkul = semester
-                End If
-            End If
-
-            If IsComboBoxSelected(cmbProdi) Then
-                matkul.KdProdi = cmbProdi.SelectedValue?.ToString()
-            End If
-
+            matkul = MapUItoEntity()
         Catch ex As ArgumentException
             ShowError(ex.Message)
             Return False
@@ -261,47 +288,8 @@ Public Class FrmInputMataKuliah
     End Function
 #End Region
 
-#Region "Override Methods - Query"
-    ''' <summary>
-    ''' Query INSERT untuk Mata Kuliah.
-    ''' </summary>
-    Protected Overrides Function GetInsertQuery() As String
-        Return "INSERT INTO tbl_matakuliah (kd_matkul, nama_matkul, sks_matkul, teori_matkul, praktek_matkul, semester_matkul, kd_prodi) " &
-               "VALUES (@kd_matkul, @nama_matkul, @sks_matkul, @teori_matkul, @praktek_matkul, @semester_matkul, @kd_prodi)"
-    End Function
-
-    ''' <summary>
-    ''' Query UPDATE untuk Mata Kuliah.
-    ''' </summary>
-    Protected Overrides Function GetUpdateQuery() As String
-        Return "UPDATE tbl_matakuliah SET nama_matkul = @nama_matkul, sks_matkul = @sks_matkul, " &
-               "teori_matkul = @teori_matkul, praktek_matkul = @praktek_matkul, semester_matkul = @semester_matkul, kd_prodi = @kd_prodi " &
-               "WHERE kd_matkul = @kd_matkul"
-    End Function
-
-    ''' <summary>
-    ''' Parameter untuk query INSERT/UPDATE.
-    ''' </summary>
-    Protected Overrides Function GetQueryParameters() As MySqlParameter()
-        Dim sksTeori As Integer = CInt(nudSksTeori.Value)
-        Dim sksPraktek As Integer = CInt(nudSksPraktek.Value)
-        Dim totalSks As Integer = sksTeori + sksPraktek
-
-        Dim semester As Integer = 0
-        If cmbSemester.SelectedIndex > 0 Then
-            Integer.TryParse(cmbSemester.SelectedItem.ToString(), semester)
-        End If
-
-        Return {
-            New MySqlParameter("@kd_matkul", txtKodeMataKuliah.Text.Trim().ToUpper()),
-            New MySqlParameter("@nama_matkul", txtNamaMataKuliah.Text.Trim().ToUpper()),
-            New MySqlParameter("@sks_matkul", totalSks),
-            New MySqlParameter("@teori_matkul", sksTeori),
-            New MySqlParameter("@praktek_matkul", sksPraktek),
-            New MySqlParameter("@semester_matkul", semester),
-            New MySqlParameter("@kd_prodi", If(IsComboBoxSelected(cmbProdi), cmbProdi.SelectedValue, DBNull.Value))
-        }
-    End Function
+#Region "Override Methods - Query (Removed in favor of Repository)"
+    ' Logika SQL dipindahkan ke MatakuliahRepository.vb
 #End Region
 
 #Region "Override Methods - Form Reset"

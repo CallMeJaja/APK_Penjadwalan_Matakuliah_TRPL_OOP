@@ -63,6 +63,25 @@ Public Class FrmInputRuang
     End Sub
 #End Region
 
+#Region "Override Methods - Save Execution (Repository Pattern)"
+    ''' <summary>
+    ''' Eksekusi simpan menggunakan RuangkelasRepository.
+    ''' </summary>
+    Protected Overrides Function ExecuteSave() As Boolean
+        Dim repo As New RuangkelasRepository()
+        Dim ruang As New RuangkelasEntity()
+        ruang.Kode = txtIdRuangan.Text.Trim()
+        ruang.NamaRuangan = txtNamaRuangan.Text.Trim().ToUpper()
+        ruang.Kapasitas = CInt(nudKapasitas.Value)
+
+        If IsEditMode Then
+            Return repo.Update(ruang)
+        Else
+            Return repo.Insert(ruang)
+        End If
+    End Function
+#End Region
+
 #Region "Override Methods - Validation"
     ''' <summary>
     ''' Validasi input sebelum save.
@@ -94,31 +113,8 @@ Public Class FrmInputRuang
     End Function
 #End Region
 
-#Region "Override Methods - Query"
-    ''' <summary>
-    ''' Query INSERT untuk Ruang Kelas.
-    ''' </summary>
-    Protected Overrides Function GetInsertQuery() As String
-        Return "INSERT INTO tbl_ruangkelas (kd_ruangan, nama_ruangan, kapasitas) VALUES (@kd_ruangan, @nama_ruangan, @kapasitas)"
-    End Function
-
-    ''' <summary>
-    ''' Query UPDATE untuk Ruang Kelas.
-    ''' </summary>
-    Protected Overrides Function GetUpdateQuery() As String
-        Return "UPDATE tbl_ruangkelas SET nama_ruangan = @nama_ruangan, kapasitas = @kapasitas WHERE kd_ruangan = @kd_ruangan"
-    End Function
-
-    ''' <summary>
-    ''' Parameter untuk query INSERT/UPDATE.
-    ''' </summary>
-    Protected Overrides Function GetQueryParameters() As MySqlParameter()
-        Return {
-            New MySqlParameter("@kd_ruangan", txtIdRuangan.Text.Trim()),
-            New MySqlParameter("@nama_ruangan", txtNamaRuangan.Text.Trim().ToUpper()),
-            New MySqlParameter("@kapasitas", CInt(nudKapasitas.Value))
-        }
-    End Function
+#Region "Override Methods - Query (Removed in favor of Repository)"
+    ' Logika SQL dipindahkan ke RuangkelasRepository.vb
 #End Region
 
 #Region "Override Methods - Form Reset"

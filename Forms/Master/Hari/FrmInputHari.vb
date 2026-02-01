@@ -58,6 +58,24 @@ Public Class FrmInputHari
     End Sub
 #End Region
 
+#Region "Override Methods - Save Execution (Repository Pattern)"
+    ''' <summary>
+    ''' Eksekusi simpan menggunakan HariRepository.
+    ''' </summary>
+    Protected Overrides Function ExecuteSave() As Boolean
+        Dim repo As New HariRepository()
+        Dim hari As New HariEntity()
+        hari.Kode = txtKodeHari.Text.Trim()
+        hari.NamaHari = txtNamaHari.Text.Trim().ToUpper()
+
+        If IsEditMode Then
+            Return repo.Update(hari)
+        Else
+            Return repo.Insert(hari)
+        End If
+    End Function
+#End Region
+
 #Region "Override Methods - Validation"
     ''' <summary>
     ''' Validasi input sebelum save.
@@ -88,30 +106,8 @@ Public Class FrmInputHari
     End Function
 #End Region
 
-#Region "Override Methods - Query"
-    ''' <summary>
-    ''' Query INSERT untuk Hari.
-    ''' </summary>
-    Protected Overrides Function GetInsertQuery() As String
-        Return "INSERT INTO tbl_hari (id_hari, nama_hari) VALUES (@id_hari, @nama_hari)"
-    End Function
-
-    ''' <summary>
-    ''' Query UPDATE untuk Hari.
-    ''' </summary>
-    Protected Overrides Function GetUpdateQuery() As String
-        Return "UPDATE tbl_hari SET nama_hari = @nama_hari WHERE id_hari = @id_hari"
-    End Function
-
-    ''' <summary>
-    ''' Parameter untuk query INSERT/UPDATE.
-    ''' </summary>
-    Protected Overrides Function GetQueryParameters() As MySqlParameter()
-        Return {
-            New MySqlParameter("@id_hari", txtKodeHari.Text.Trim()),
-            New MySqlParameter("@nama_hari", txtNamaHari.Text.Trim().ToUpper())
-        }
-    End Function
+#Region "Override Methods - Query (Removed in favor of Repository)"
+    ' Logika SQL dipindahkan ke HariRepository.vb
 #End Region
 
 #Region "Override Methods - Form Reset"

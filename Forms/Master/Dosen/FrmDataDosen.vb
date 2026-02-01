@@ -7,24 +7,36 @@
 Public Class FrmDataDosen
 
 #Region "Override Properties"
+    ''' <summary>
+    ''' Nama tabel database untuk Dosen.
+    ''' </summary>
     Protected Overrides ReadOnly Property TableName As String
         Get
             Return "tbl_dosen"
         End Get
     End Property
 
+    ''' <summary>
+    ''' Nama kolom primary key untuk Dosen.
+    ''' </summary>
     Protected Overrides ReadOnly Property PrimaryKey As String
         Get
             Return "kd_dosen"
         End Get
     End Property
 
+    ''' <summary>
+    ''' Nama modul untuk identifikasi di UI/Pesan.
+    ''' </summary>
     Protected Overrides ReadOnly Property ModuleName As String
         Get
             Return "Dosen"
         End Get
     End Property
 
+    ''' <summary>
+    ''' Daftar kolom yang digunakan untuk pencarian.
+    ''' </summary>
     Protected Overrides ReadOnly Property SearchColumns As String()
         Get
             Return {"kd_dosen", "nidn_dosen", "nama_dosen", "email_dosen"}
@@ -32,17 +44,28 @@ Public Class FrmDataDosen
     End Property
 #End Region
 
-#Region "Override Methods"
+#Region "Override Methods - Data Source (Repository Pattern)"
     ''' <summary>
-    ''' Query SELECT dengan JOIN ke tbl_prodi untuk menampilkan nama prodi.
+    ''' Mengambil data melalui DosenRepository.
+    ''' Memastikan query terpusat di satu tempat (Repository).
     ''' </summary>
-    Protected Overrides Function GetSelectQuery() As String
-        Return "SELECT d.kd_dosen, d.nidn_dosen, d.nama_dosen, p.nama_prodi, d.jk_dosen, d.no_telp_dosen, d.email_dosen " &
-               "FROM tbl_dosen d " &
-               "LEFT JOIN tbl_prodi p ON d.kd_prodi = p.kd_prodi " &
-               "ORDER BY d.nama_dosen"
+    Protected Overrides Function GetDataTableFromSource() As DataTable
+        Dim repo As New DosenRepository()
+        Return repo.GetAllDataTable()
     End Function
 
+    ''' <summary>
+    ''' Eksekusi hapus menggunakan Repository.
+    ''' </summary>
+    Protected Overrides Function ExecuteDelete(recordId As String) As Boolean
+        Dim repo As New DosenRepository()
+        Return repo.Delete(recordId)
+    End Function
+
+    ' Method GetSelectQuery lama dihapus karena sudah ditangani oleh GetDataTableFromSource
+#End Region
+
+#Region "Override Methods"
     ''' <summary>
     ''' Inisialisasi filter ComboBox untuk Prodi dan Gender.
     ''' </summary>
@@ -145,6 +168,8 @@ Public Class FrmDataDosen
     ''' <summary>
     ''' Validasi sebelum hapus: cek apakah ada pengampu yang terkait.
     ''' </summary>
+    ''' <param name="recordId">ID dosen yang akan dihapus.</param>
+    ''' <returns>True jika valid untuk dihapus, False jika tidak.</returns>
     Protected Overrides Function ValidateBeforeDelete(recordId As String) As Boolean
         If HasChildRecords("tbl_dosen_pengampu_matkul", "kd_dosen", recordId) Then
             ShowWarning("Dosen tidak dapat dihapus karena masih ada data Pengampu Mata Kuliah yang terkait!")
@@ -154,6 +179,9 @@ Public Class FrmDataDosen
         Return True
     End Function
 
+    ''' <summary>
+    ''' Mereset filter dan memuat ulang data.
+    ''' </summary>
     Protected Overrides Sub ResetFiltersAndReload()
         If cmbFilterProdi.Items.Count > 0 Then cmbFilterProdi.SelectedIndex = 0
         If cmbFilterGender.Items.Count > 0 Then cmbFilterGender.SelectedIndex = 0
@@ -163,18 +191,27 @@ Public Class FrmDataDosen
 #End Region
 
 #Region "Filter Events"
+    ''' <summary>
+    ''' Handler saat pilihan filter Prodi berubah.
+    ''' </summary>
     Private Sub cmbFilterProdi_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cmbFilterProdi.SelectedIndexChanged
         If _isInternalChange Then Exit Sub
         ApplyFilter()
         AutoWidthComboBox(cmbFilterProdi)
     End Sub
 
+    ''' <summary>
+    ''' Handler saat pilihan filter Gender berubah.
+    ''' </summary>
     Private Sub cmbFilterGender_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cmbFilterGender.SelectedIndexChanged
         If _isInternalChange Then Exit Sub
         ApplyFilter()
         AutoWidthComboBox(cmbFilterGender)
     End Sub
 
+    ''' <summary>
+    ''' Handler saat form dimuat.
+    ''' </summary>
     Private Sub FrmDataDosen_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
     End Sub

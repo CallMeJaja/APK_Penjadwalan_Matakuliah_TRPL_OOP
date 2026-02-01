@@ -72,30 +72,53 @@ Public Class FrmInputUser
     End Sub
 #End Region
 
+#Region "Override Methods - Save Execution (Repository Pattern)"
+    ''' <summary>
+    ''' Eksekusi simpan menggunakan UserRepository.
+    ''' </summary>
+    Protected Overrides Function ExecuteSave() As Boolean
+        Dim repo As New UserRepository()
+        Dim user As UserEntity = MapUItoEntity()
+
+        ' Khusus User: Tangani logika password (jangan update jika kosong pada mode Edit)
+        If IsEditMode Then
+            Return repo.Update(user)
+        Else
+            Return repo.Insert(user)
+        End If
+    End Function
+
+    ''' <summary>
+    ''' Helper untuk memetakan nilai dari UI ke objek Entity.
+    ''' </summary>
+    Private Function MapUItoEntity() As UserEntity
+        Dim user As New UserEntity()
+        user.Kode = txtIdUser.Text.Trim()
+        user.NamaUser = txtNamaUser.Text.Trim()
+
+        ' Password hanya diisi jika tidak kosong (terutama untuk mode Edit)
+        If Not String.IsNullOrEmpty(txtPasswordUser.Text) OrElse Not IsEditMode Then
+            user.PassUser = txtPasswordUser.Text
+        End If
+
+        If cmbLevelUser.SelectedIndex > 0 Then
+            user.LevelUser = cmbLevelUser.SelectedItem.ToString()
+        End If
+
+        Return user
+    End Function
+#End Region
+
 #Region "Override Methods - Validation"
     ''' <summary>
     ''' Validasi input sebelum save.
     ''' Menggunakan UserEntity untuk validasi OOP.
     ''' </summary>
     Protected Overrides Function ValidateInput() As Boolean
-        Dim user As New UserEntity()
+        Dim user As UserEntity
 
         Try
-            user.Kode = txtIdUser.Text.Trim()
-            user.NamaUser = txtNamaUser.Text.Trim()
-
-            If Not IsEditMode Then
-                user.PassUser = txtPasswordUser.Text
-            ElseIf Not String.IsNullOrEmpty(txtPasswordUser.Text) Then
-                user.PassUser = txtPasswordUser.Text
-            End If
-
-            If cmbLevelUser.SelectedIndex > 0 Then
-                user.LevelUser = cmbLevelUser.SelectedItem.ToString()
-            Else
-                user.LevelUser = ""
-            End If
-
+            user = MapUItoEntity()
         Catch ex As ArgumentException
             ShowError(ex.Message)
             Return False
@@ -115,50 +138,8 @@ Public Class FrmInputUser
     End Function
 #End Region
 
-#Region "Override Methods - Query"
-    ''' <summary>
-    ''' Query INSERT untuk User.
-    ''' Kolom: id_user, nama_user, pass_user, level_user
-    ''' </summary>
-    Protected Overrides Function GetInsertQuery() As String
-        Return "INSERT INTO tbl_user (id_user, nama_user, pass_user, level_user) " &
-               "VALUES (@id_user, @nama_user, @pass_user, @level_user)"
-    End Function
-
-    ''' <summary>
-    ''' Query UPDATE untuk User.
-    ''' Jika password kosong, jangan update password.
-    ''' </summary>
-    Protected Overrides Function GetUpdateQuery() As String
-        If String.IsNullOrEmpty(txtPasswordUser.Text) Then
-            Return "UPDATE tbl_user SET nama_user = @nama_user, level_user = @level_user " &
-                   "WHERE id_user = @id_user"
-        Else
-            Return "UPDATE tbl_user SET nama_user = @nama_user, pass_user = @pass_user, level_user = @level_user " &
-                   "WHERE id_user = @id_user"
-        End If
-    End Function
-
-    ''' <summary>
-    ''' Parameter untuk query INSERT/UPDATE.
-    ''' </summary>
-    Protected Overrides Function GetQueryParameters() As MySqlParameter()
-        Dim level As String = ""
-        If cmbLevelUser.SelectedIndex > 0 Then
-            level = cmbLevelUser.SelectedItem.ToString()
-        End If
-
-        Dim params As New List(Of MySqlParameter)
-        params.Add(New MySqlParameter("@id_user", txtIdUser.Text.Trim()))
-        params.Add(New MySqlParameter("@nama_user", txtNamaUser.Text.Trim()))
-        params.Add(New MySqlParameter("@level_user", level))
-
-        If Not String.IsNullOrEmpty(txtPasswordUser.Text) OrElse Not IsEditMode Then
-            params.Add(New MySqlParameter("@pass_user", txtPasswordUser.Text))
-        End If
-
-        Return params.ToArray()
-    End Function
+#Region "Override Methods - Query (Removed in favor of Repository)"
+    ' Logika SQL dipindahkan ke UserRepository.vb
 #End Region
 
 #Region "Override Methods - Form Reset"

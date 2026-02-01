@@ -129,6 +129,67 @@ Module ModValidasi
             TutupKoneksi()
         End Try
     End Function
+
+    ''' <summary>
+    ''' Mengecek bentrok jadwal untuk ruangan atau dosen pada waktu tertentu.
+    ''' </summary>
+    ''' <param name="idHari">ID hari yang dicek.</param>
+    ''' <param name="jamAwal">Jam mulai jadwal baru.</param>
+    ''' <param name="jamAkhir">Jam selesai jadwal baru.</param>
+    ''' <param name="idRuangan">ID ruangan yang dicek.</param>
+    ''' <param name="kdDosen">Kode dosen yang dicek.</param>
+    ''' <param name="tahunAkademik">Tahun akademik aktif.</param>
+    ''' <param name="excludeId">ID pengampu yang dikecualikan (untuk mode edit).</param>
+    ''' <returns>String pesan error jika bentrok, string kosong jika aman.</returns>
+    Public Function CheckJadwalBentrok(idHari As String, jamAwal As TimeSpan, jamAkhir As TimeSpan,
+                                      idRuangan As String, kdDosen As String, tahunAkademik As String,
+                                      Optional excludeId As String = "") As String
+        Dim queryR As String = "SELECT COUNT(*) FROM tbl_jadwal_matkul j " &
+                              "JOIN tbl_dosen_pengampu_matkul p ON j.kd_pengampu = p.kd_pengampu " &
+                              "WHERE j.id_hari = @hari AND j.kd_ruangan = @ruang " &
+                              "AND p.tahun_akademik = @tahun " &
+                              "AND ((j.jam_awal < @akhir AND j.jam_akhir > @awal))"
+
+        Dim pR As New List(Of MySqlParameter) From {
+            New MySqlParameter("@hari", idHari),
+            New MySqlParameter("@ruang", idRuangan),
+            New MySqlParameter("@tahun", tahunAkademik),
+            New MySqlParameter("@awal", jamAwal),
+            New MySqlParameter("@akhir", jamAkhir)
+        }
+        If Not String.IsNullOrEmpty(excludeId) Then
+            queryR &= " AND j.kd_pengampu <> @id"
+            pR.Add(New MySqlParameter("@id", excludeId))
+        End If
+
+        If Convert.ToInt32(GetScalarValueWithParams(queryR, pR.ToArray())) > 0 Then
+            Return "Bentrok! Ruangan sudah digunakan pada jam tersebut."
+        End If
+
+        Dim queryD As String = "SELECT COUNT(*) FROM tbl_jadwal_matkul j " &
+                              "JOIN tbl_dosen_pengampu_matkul p ON j.kd_pengampu = p.kd_pengampu " &
+                              "WHERE j.id_hari = @hari AND p.kd_dosen = @dosen " &
+                              "AND p.tahun_akademik = @tahun " &
+                              "AND ((j.jam_awal < @akhir AND j.jam_akhir > @awal))"
+
+        Dim pD As New List(Of MySqlParameter) From {
+            New MySqlParameter("@hari", idHari),
+            New MySqlParameter("@dosen", kdDosen),
+            New MySqlParameter("@tahun", tahunAkademik),
+            New MySqlParameter("@awal", jamAwal),
+            New MySqlParameter("@akhir", jamAkhir)
+        }
+        If Not String.IsNullOrEmpty(excludeId) Then
+            queryD &= " AND j.kd_pengampu <> @id"
+            pD.Add(New MySqlParameter("@id", excludeId))
+        End If
+
+        If Convert.ToInt32(GetScalarValueWithParams(queryD, pD.ToArray())) > 0 Then
+            Return "Bentrok! Dosen sudah mengajar pada jam tersebut."
+        End If
+
+        Return ""
+    End Function
 #End Region
 
 #Region "String Validation"

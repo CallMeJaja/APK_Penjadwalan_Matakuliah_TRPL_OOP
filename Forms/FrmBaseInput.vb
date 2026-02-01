@@ -203,18 +203,8 @@ Public Class FrmBaseInput
             ' Jalankan before save hook
             If Not BeforeSave() Then Return
 
-            ' Dapatkan query dan parameter
-            Dim query As String
-            If IsEditMode Then
-                query = GetUpdateQuery()
-            Else
-                query = GetInsertQuery()
-            End If
-
-            Dim params() As MySqlParameter = GetQueryParameters()
-
-            ' Execute query
-            If ExecuteQuery(query, params) Then
+            ' Eksekusi simpan (melalui Repository atau Query lama)
+            If ExecuteSave() Then
                 ' Jalankan after save hook
                 AfterSave()
 
@@ -231,6 +221,27 @@ Public Class FrmBaseInput
             Cursor = Cursors.Default
         End Try
     End Sub
+
+    ''' <summary>
+    ''' Inti dari proses penyimpanan data. 
+    ''' Secara default menggunakan query INSERT/UPDATE (Backward Compatibility).
+    ''' Override di child class untuk menggunakan Repository.
+    ''' </summary>
+    ''' <returns>True jika berhasil, False jika gagal.</returns>
+    Protected Overridable Function ExecuteSave() As Boolean
+        ' Dapatkan query dan parameter
+        Dim query As String
+        If IsEditMode Then
+            query = GetUpdateQuery()
+        Else
+            query = GetInsertQuery()
+        End If
+
+        Dim params() As MySqlParameter = GetQueryParameters()
+
+        ' Execute query langsung (Cara lama)
+        Return ExecuteQuery(query, params)
+    End Function
 
     ''' <summary>
     ''' Hook yang dijalankan sebelum save. Override untuk custom logic.

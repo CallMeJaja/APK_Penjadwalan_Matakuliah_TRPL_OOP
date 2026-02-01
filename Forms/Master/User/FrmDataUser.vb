@@ -7,24 +7,36 @@
 Public Class FrmDataUser
 
 #Region "Override Properties"
+    ''' <summary>
+    ''' Nama tabel user di database.
+    ''' </summary>
     Protected Overrides ReadOnly Property TableName As String
         Get
             Return "tbl_user"
         End Get
     End Property
 
+    ''' <summary>
+    ''' Primary key tabel user.
+    ''' </summary>
     Protected Overrides ReadOnly Property PrimaryKey As String
         Get
             Return "id_user"
         End Get
     End Property
 
+    ''' <summary>
+    ''' Nama modul user.
+    ''' </summary>
     Protected Overrides ReadOnly Property ModuleName As String
         Get
             Return "User"
         End Get
     End Property
 
+    ''' <summary>
+    ''' Kolom pencarian untuk user.
+    ''' </summary>
     Protected Overrides ReadOnly Property SearchColumns As String()
         Get
             Return {"id_user", "nama_user", "level_user"}
@@ -32,13 +44,25 @@ Public Class FrmDataUser
     End Property
 #End Region
 
-#Region "Override Methods"
+#Region "Override Methods - Data Source (Repository Pattern)"
     ''' <summary>
-    ''' Query SELECT - jangan tampilkan password.
+    ''' Mengambil data melalui UserRepository (Tanpa Password).
     ''' </summary>
-    Protected Overrides Function GetSelectQuery() As String
-        Return "SELECT id_user, nama_user, level_user FROM tbl_user ORDER BY id_user"
+    Protected Overrides Function GetDataTableFromSource() As DataTable
+        Dim repo As New UserRepository()
+        Return repo.GetAllDataTable()
     End Function
+
+    ''' <summary>
+    ''' Eksekusi hapus menggunakan Repository.
+    ''' </summary>
+    Protected Overrides Function ExecuteDelete(recordId As String) As Boolean
+        Dim repo As New UserRepository()
+        Return repo.Delete(recordId)
+    End Function
+#End Region
+
+#Region "Override Methods"
 
     ''' <summary>
     ''' Inisialisasi filter ComboBox untuk Level User.
@@ -115,6 +139,9 @@ Public Class FrmDataUser
         Return String.Join(" AND ", conditions)
     End Function
 
+    ''' <summary>
+    ''' Reset filter Level User dan reload data.
+    ''' </summary>
     Protected Overrides Sub ResetFiltersAndReload()
         cmbFilterLevelUser.SelectedIndex = 0
         txtCari.Clear()

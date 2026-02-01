@@ -1,5 +1,7 @@
-Imports MySql.Data.MySqlClient
-
+''' <summary>
+''' Form input untuk data Penjadwalan Mata Kuliah.
+''' Menangani mode tambah dan ubah jadwal dengan integrasi JadwalRepository.
+''' </summary>
 Public Class FrmInputPenjadwalanMataKuliah
     Inherits FrmBaseInput
 
@@ -7,8 +9,14 @@ Public Class FrmInputPenjadwalanMataKuliah
     Private _kdDosen As String = ""
     Private _namaKelas As String = ""
     Private _tahunAkademik As String = ""
+    Private _idHari As String = ""
+    Private _idRuangan As String = ""
+    Private _idTahunAkademik As String = ""
 
 #Region "Override Methods - Initialization"
+    ''' <summary>
+    ''' Inisialisasi awal form, setup control, dan load data jika dalam mode edit.
+    ''' </summary>
     Protected Overrides Sub InitializeForm()
         lblJudul.Text = If(IsEditMode, "UBAH JADWAL MATA KULIAH", "TAMBAH JADWAL MATA KULIAH")
 
@@ -50,73 +58,121 @@ Public Class FrmInputPenjadwalanMataKuliah
         End If
     End Sub
 
+    ''' <summary>
+    ''' Setup handler tambahan untuk form.
+    ''' </summary>
     Protected Overrides Sub SetupForm()
         AddHandler dtpJamMulai.ValueChanged, AddressOf HitungJamSelesai
     End Sub
 #End Region
 
 #Region "Load Data (Edit Mode)"
+    ''' <summary>
+    ''' Memuat data jadwal atau pengampu ke dalam form.
+    ''' </summary>
     Protected Overrides Sub LoadFormData()
-        Dim query As String = "SELECT p.kd_pengampu, p.kd_dosen, p.kd_matkul, p.nama_kelas, p.tahun_akademik, " &
-                              "j.id_hari, j.jam_awal, j.jam_akhir, j.kd_ruangan, " &
-                              "d.nama_dosen, d.nidn_dosen, m.nama_matkul, m.sks_matkul, m.teori_matkul, " &
-                              "m.praktek_matkul, m.semester_matkul, m.kd_prodi " &
-                              "FROM tbl_dosen_pengampu_matkul p " &
-                              "JOIN tbl_dosen d ON p.kd_dosen = d.kd_dosen " &
-                              "JOIN tbl_matakuliah m ON p.kd_matkul = m.kd_matkul " &
-                              "LEFT JOIN tbl_jadwal_matkul j ON p.kd_pengampu = j.kd_pengampu " &
-                              "WHERE p.kd_pengampu = @id"
+        Dim repo As New JadwalRepository()
+        Dim j As JadwalEntity = repo.GetById(RecordId)
 
-        Dim dt As DataTable = ModDbCrud.LoadDataWithParams(query, New MySqlParameter("@id", RecordId))
+        If j IsNot Nothing Then
+            _idHari = j.IdHari
+            _idRuangan = j.IdRuangan
+            _kdPengampu = j.KdPengampu
+            _idTahunAkademik = j.IdTahunAkademik
 
-        If dt Is Nothing OrElse dt.Rows.Count = 0 Then
-            _kdPengampu = ""
-            If Not String.IsNullOrEmpty(RecordId) Then
-                ShowWarning("Informasi Pengampu tidak ditemukan di sistem!")
+            dtpJamMulai.Value = DateTime.Today.Add(j.JamAwal)
+            dtpJamSelesai.Value = DateTime.Today.Add(j.JamAkhir)
+
+            Dim query As String = "SELECT p.kd_pengampu, p.kd_dosen, p.kd_matkul, p.nama_kelas, p.tahun_akademik, " &
+                                  "d.nama_dosen, d.nidn_dosen, m.nama_matkul, m.sks_matkul, m.teori_matkul, " &
+                                  "m.praktek_matkul, m.semester_matkul, m.kd_prodi " &
+                                  "FROM tbl_dosen_pengampu_matkul p " &
+                                  "JOIN tbl_dosen d ON p.kd_dosen = d.kd_dosen " &
+                                  "JOIN tbl_matakuliah m ON p.kd_matkul = m.kd_matkul " &
+                                  "WHERE p.kd_pengampu = @id"
+
+            ' Ambil detail pengampu menggunakan field dari JadwalEntity
+            Dim dt As DataTable = ModDbCrud.LoadDataWithParams(query, New MySqlParameter("@id", _kdPengampu))
+
+            If dt IsNot Nothing AndAlso dt.Rows.Count > 0 Then
+                Dim row As DataRow = dt.Rows(0)
+
+                _kdDosen = row("kd_dosen").ToString()
+                _namaKelas = row("nama_kelas").ToString()
+                _tahunAkademik = row("tahun_akademik").ToString()
+
+                SetComboBoxValue(cmbProdi, row("kd_prodi").ToString())
+                SetComboBoxValue(cmbTahunAkademik, _tahunAkademik)
+
+                Dim smt As Integer = ParseInt(row("semester_matkul").ToString())
+                cmbTipeSemester.SelectedIndex = If(smt Mod 2 <> 0, 0, 1)
+
+                If Not String.IsNullOrEmpty(_idRuangan) Then cmbRuangan.SelectedValue = _idRuangan
+                If Not String.IsNullOrEmpty(_idHari) Then cmbHari.SelectedValue = _idHari
+
+                txtKodeDosen.Text = row("kd_dosen").ToString()
+                txtNidn.Text = row("nidn_dosen").ToString()
+                txtNamaDosen.Text = row("nama_dosen").ToString()
+                txtKodeMatkul.Text = row("kd_matkul").ToString()
+                txtNamaMatkul.Text = row("nama_matkul").ToString()
+                txtTotalSks.Text = row("sks_matkul").ToString()
+                txtSksTeori.Text = row("teori_matkul").ToString()
+                txtSksPraktek.Text = row("praktek_matkul").ToString()
+                txtSemester.Text = row("semester_matkul").ToString()
             End If
-            Return
         End If
 
-        Dim row As DataRow = dt.Rows(0)
+        If j Is Nothing AndAlso Not String.IsNullOrEmpty(RecordId) Then
+            _kdPengampu = RecordId
+            Dim query As String = "SELECT p.kd_pengampu, p.kd_dosen, p.kd_matkul, p.nama_kelas, p.tahun_akademik, " &
+                                  "d.nama_dosen, d.nidn_dosen, m.nama_matkul, m.sks_matkul, m.teori_matkul, " &
+                                  "m.praktek_matkul, m.semester_matkul, m.kd_prodi " &
+                                  "FROM tbl_dosen_pengampu_matkul p " &
+                                  "JOIN tbl_dosen d ON p.kd_dosen = d.kd_dosen " &
+                                  "JOIN tbl_matakuliah m ON p.kd_matkul = m.kd_matkul " &
+                                  "WHERE p.kd_pengampu = @id"
 
-        _kdPengampu = row("kd_pengampu").ToString()
-        _kdDosen = row("kd_dosen").ToString()
-        _namaKelas = row("nama_kelas").ToString()
-        _tahunAkademik = row("tahun_akademik").ToString()
+            Dim dt As DataTable = ModDbCrud.LoadDataWithParams(query, New MySqlParameter("@id", _kdPengampu))
 
-        SetComboBoxValue(cmbProdi, row("kd_prodi").ToString())
-        SetComboBoxValue(cmbTahunAkademik, _tahunAkademik)
+            If dt IsNot Nothing AndAlso dt.Rows.Count > 0 Then
+                Dim row As DataRow = dt.Rows(0)
 
-        Dim smt As Integer = ParseInt(row("semester_matkul").ToString())
-        cmbTipeSemester.SelectedIndex = If(smt Mod 2 <> 0, 0, 1)
+                _kdDosen = row("kd_dosen").ToString()
+                _namaKelas = row("nama_kelas").ToString()
+                _tahunAkademik = row("tahun_akademik").ToString()
 
-        If row("kd_ruangan") IsNot DBNull.Value Then cmbRuangan.SelectedValue = row("kd_ruangan").ToString()
-        If row("id_hari") IsNot DBNull.Value Then cmbHari.SelectedValue = row("id_hari").ToString()
+                SetComboBoxValue(cmbProdi, row("kd_prodi").ToString())
+                SetComboBoxValue(cmbTahunAkademik, _tahunAkademik)
 
-        If row("jam_awal") IsNot DBNull.Value Then
-            dtpJamMulai.Value = DateTime.Today.Add(DirectCast(row("jam_awal"), TimeSpan))
+                Dim smt As Integer = ParseInt(row("semester_matkul").ToString())
+                cmbTipeSemester.SelectedIndex = If(smt Mod 2 <> 0, 0, 1)
+
+                txtKodeDosen.Text = row("kd_dosen").ToString()
+                txtNidn.Text = row("nidn_dosen").ToString()
+                txtNamaDosen.Text = row("nama_dosen").ToString()
+                txtKodeMatkul.Text = row("kd_matkul").ToString()
+                txtNamaMatkul.Text = row("nama_matkul").ToString()
+                txtTotalSks.Text = row("sks_matkul").ToString()
+                txtSksTeori.Text = row("teori_matkul").ToString()
+                txtSksPraktek.Text = row("praktek_matkul").ToString()
+                txtSemester.Text = row("semester_matkul").ToString()
+
+                txtCariPengampu.Text = row("nama_dosen").ToString() & " - " & row("nama_matkul").ToString()
+            Else
+                _kdPengampu = ""
+                ShowWarning("Informasi Pengampu tidak ditemukan di sistem!")
+                Return
+            End If
         End If
-        If row("jam_akhir") IsNot DBNull.Value Then
-            dtpJamSelesai.Value = DateTime.Today.Add(DirectCast(row("jam_akhir"), TimeSpan))
-        End If
-
-        txtKodeDosen.Text = row("kd_dosen").ToString()
-        txtNidn.Text = row("nidn_dosen").ToString()
-        txtNamaDosen.Text = row("nama_dosen").ToString()
-        txtKodeMatkul.Text = row("kd_matkul").ToString()
-        txtNamaMatkul.Text = row("nama_matkul").ToString()
-        txtTotalSks.Text = row("sks_matkul").ToString()
-        txtSksTeori.Text = row("teori_matkul").ToString()
-        txtSksPraktek.Text = row("praktek_matkul").ToString()
-        txtSemester.Text = row("semester_matkul").ToString()
-
-        txtCariPengampu.Text = row("nama_dosen").ToString() & " - " & row("nama_matkul").ToString()
 
         HitungJamSelesai()
     End Sub
 #End Region
 
 #Region "Duration Calculation"
+    ''' <summary>
+    ''' Menghitung jam selesai secara otomatis berdasarkan total SKS teori dan praktek.
+    ''' </summary>
     Private Sub HitungJamSelesai()
         If String.IsNullOrEmpty(txtSksTeori.Text) AndAlso String.IsNullOrEmpty(txtSksPraktek.Text) Then Exit Sub
 
@@ -130,12 +186,15 @@ Public Class FrmInputPenjadwalanMataKuliah
                 dtpJamSelesai.Value = dtpJamMulai.Value.AddMinutes(totalMenit)
             End If
         Catch ex As Exception
-            ' Ignore error during calculation
+            ' Abaikan error saat perhitungan otomatis
         End Try
     End Sub
 #End Region
 
 #Region "Lookup Pengampu"
+    ''' <summary>
+    ''' Event handler untuk membuka form lookup pemilihan pengampu mata kuliah.
+    ''' </summary>
     Private Sub btnCariPengampu_Click(sender As Object, e As EventArgs) Handles btnCariPengampu.Click
         Dim query As String = "SELECT p.kd_pengampu, p.kd_dosen, d.nama_dosen, d.nidn_dosen, " &
                               "p.kd_matkul, m.nama_matkul, m.sks_matkul, m.teori_matkul, m.praktek_matkul, " &
@@ -146,7 +205,7 @@ Public Class FrmInputPenjadwalanMataKuliah
                               "WHERE 1=1"
 
         Dim params As New List(Of MySqlParameter)
-        
+
         If cmbTahunAkademik.SelectedIndex >= 0 Then
             query &= " AND p.tahun_akademik = @tahun"
             params.Add(New MySqlParameter("@tahun", cmbTahunAkademik.Text))
@@ -163,6 +222,7 @@ Public Class FrmInputPenjadwalanMataKuliah
             _kdDosen = row("kd_dosen").ToString()
             _namaKelas = row("nama_kelas").ToString()
             _tahunAkademik = row("tahun_akademik").ToString()
+            _idTahunAkademik = row("tahun_akademik").ToString()
 
             txtKodeDosen.Text = row("kd_dosen").ToString()
             txtNidn.Text = row("nidn_dosen").ToString()
@@ -179,6 +239,9 @@ Public Class FrmInputPenjadwalanMataKuliah
         End If
     End Sub
 
+    ''' <summary>
+    ''' Mendukung pencarian pengampu dengan menekan tombol Enter.
+    ''' </summary>
     Private Sub txtCariPengampu_KeyDown(sender As Object, e As KeyEventArgs) Handles txtCariPengampu.KeyDown
         If e.KeyCode = Keys.Enter Then
             btnCariPengampu.PerformClick()
@@ -188,6 +251,10 @@ Public Class FrmInputPenjadwalanMataKuliah
 #End Region
 
 #Region "Validation & Conflict Checks"
+    ''' <summary>
+    ''' Melakukan validasi input sebelum data disimpan, termasuk pengecekan field wajib.
+    ''' </summary>
+    ''' <returns>True jika valid, False jika tidak valid.</returns>
     Protected Overrides Function ValidateInput() As Boolean
         If String.IsNullOrEmpty(_kdPengampu) Then
             ShowWarning("Pilih Pengampu Mata Kuliah terlebih dahulu!")
@@ -197,13 +264,22 @@ Public Class FrmInputPenjadwalanMataKuliah
         If Not ValidateRequired(cmbHari, "Hari") Then Return False
         If Not ValidateRequired(cmbRuangan, "Ruangan") Then Return False
 
+        _idHari = cmbHari.SelectedValue.ToString()
+        _idRuangan = cmbRuangan.SelectedValue.ToString()
+
         Dim jadwal As New JadwalEntity()
         Try
-            jadwal.Kode = _kdPengampu
-            jadwal.IdHari = cmbHari.SelectedValue.ToString()
-            jadwal.KdRuangan = cmbRuangan.SelectedValue.ToString()
+            jadwal.IdHari = _idHari
+            jadwal.KdRuangan = _idRuangan
+            jadwal.KdPengampu = _kdPengampu
             jadwal.JamAwal = dtpJamMulai.Value.TimeOfDay
             jadwal.JamAkhir = dtpJamSelesai.Value.TimeOfDay
+            jadwal.IdTahunAkademik = _tahunAkademik
+
+            If IsEditMode Then
+                jadwal.IdJadwal = RecordId
+            End If
+
         Catch ex As ArgumentException
             ShowWarning(ex.Message)
             Return False
@@ -214,12 +290,13 @@ Public Class FrmInputPenjadwalanMataKuliah
             Return False
         End If
 
-        If Not CekBentrokRuangan() Then Return False
-        If Not CekBentrokDosen() Then Return False
-
         Return True
     End Function
 
+    ''' <summary>
+    ''' Memeriksa apakah ruangan yang dipilih sudah digunakan pada waktu yang sama.
+    ''' </summary>
+    ''' <returns>True jika tidak bentrok, False jika bentrok.</returns>
     Private Function CekBentrokRuangan() As Boolean
         Dim query As String = "SELECT j.* FROM tbl_jadwal_matkul j " &
                             "JOIN tbl_dosen_pengampu_matkul p ON j.kd_pengampu = p.kd_pengampu " &
@@ -249,6 +326,10 @@ Public Class FrmInputPenjadwalanMataKuliah
         Return True
     End Function
 
+    ''' <summary>
+    ''' Memeriksa apakah dosen yang bertugas sudah memiliki jadwal lain pada waktu yang sama.
+    ''' </summary>
+    ''' <returns>True jika tidak bentrok, False jika bentrok.</returns>
     Private Function CekBentrokDosen() As Boolean
         If String.IsNullOrEmpty(_kdDosen) Then Return True
 
@@ -281,25 +362,30 @@ Public Class FrmInputPenjadwalanMataKuliah
     End Function
 #End Region
 
-#Region "Query Building"
-    Protected Overrides Function GetInsertQuery() As String
-        Return "INSERT INTO tbl_jadwal_matkul (kd_pengampu, id_hari, jam_awal, jam_akhir, kd_ruangan) " &
-               "VALUES (@id, @hari, @awal, @akhir, @ruang)"
-    End Function
+#Region "Override Methods - Save Execution (Repository Pattern)"
+    ''' <summary>
+    ''' Eksekusi simpan menggunakan JadwalRepository.
+    ''' Proses simpan menangani pengecekan bentrok internal di repository.
+    ''' </summary>
+    ''' <returns>True jika berhasil disimpan, False jika gagal.</returns>
+    Protected Overrides Function ExecuteSave() As Boolean
+        Dim repo As New JadwalRepository()
+        Dim j As New JadwalEntity()
+        j.Kode = _kdPengampu
+        j.IdHari = _idHari
+        j.KdRuangan = _idRuangan
+        j.JamAwal = dtpJamMulai.Value.TimeOfDay 
+        j.JamAkhir = dtpJamSelesai.Value.TimeOfDay
+        
+        If repo.IsBentrok(j) Then
+            Return False
+        End If
 
-    Protected Overrides Function GetUpdateQuery() As String
-        Return "UPDATE tbl_jadwal_matkul SET id_hari = @hari, jam_awal = @awal, jam_akhir = @akhir, kd_ruangan = @ruang " &
-               "WHERE kd_pengampu = @id"
-    End Function
-
-    Protected Overrides Function GetQueryParameters() As MySqlParameter()
-        Return {
-            New MySqlParameter("@id", _kdPengampu),
-            New MySqlParameter("@hari", cmbHari.SelectedValue),
-            New MySqlParameter("@awal", dtpJamMulai.Value.TimeOfDay),
-            New MySqlParameter("@akhir", dtpJamSelesai.Value.TimeOfDay),
-            New MySqlParameter("@ruang", cmbRuangan.SelectedValue)
-        }
+        If IsEditMode Then
+            Return repo.Update(j)
+        Else
+            Return repo.Insert(j)
+        End If
     End Function
 #End Region
 

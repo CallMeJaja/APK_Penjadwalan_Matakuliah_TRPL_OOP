@@ -562,6 +562,8 @@ Partial Class FrmInputPenjadwalanMataKuliah
         'cmbProdi
         '
         Me.cmbProdi.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.cmbProdi.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmbProdi.FlatStyle = System.Windows.Forms.FlatStyle.Flat
         Me.cmbProdi.FormattingEnabled = True
         Me.cmbProdi.Location = New System.Drawing.Point(182, 6)
         Me.cmbProdi.Name = "cmbProdi"
@@ -571,6 +573,8 @@ Partial Class FrmInputPenjadwalanMataKuliah
         'cmbTipeSemester
         '
         Me.cmbTipeSemester.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.cmbTipeSemester.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmbTipeSemester.FlatStyle = System.Windows.Forms.FlatStyle.Flat
         Me.cmbTipeSemester.FormattingEnabled = True
         Me.cmbTipeSemester.Location = New System.Drawing.Point(182, 40)
         Me.cmbTipeSemester.Name = "cmbTipeSemester"
@@ -580,6 +584,8 @@ Partial Class FrmInputPenjadwalanMataKuliah
         'cmbTahunAkademik
         '
         Me.cmbTahunAkademik.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.cmbTahunAkademik.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmbTahunAkademik.FlatStyle = System.Windows.Forms.FlatStyle.Flat
         Me.cmbTahunAkademik.FormattingEnabled = True
         Me.cmbTahunAkademik.Location = New System.Drawing.Point(182, 74)
         Me.cmbTahunAkademik.Name = "cmbTahunAkademik"
@@ -629,6 +635,8 @@ Partial Class FrmInputPenjadwalanMataKuliah
         'cmbRuangan
         '
         Me.cmbRuangan.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.cmbRuangan.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmbRuangan.FlatStyle = System.Windows.Forms.FlatStyle.Flat
         Me.cmbRuangan.FormattingEnabled = True
         Me.cmbRuangan.Location = New System.Drawing.Point(182, 159)
         Me.cmbRuangan.Name = "cmbRuangan"
@@ -638,6 +646,8 @@ Partial Class FrmInputPenjadwalanMataKuliah
         'cmbHari
         '
         Me.cmbHari.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.cmbHari.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmbHari.FlatStyle = System.Windows.Forms.FlatStyle.Flat
         Me.cmbHari.FormattingEnabled = True
         Me.cmbHari.Location = New System.Drawing.Point(182, 193)
         Me.cmbHari.Name = "cmbHari"

@@ -58,6 +58,24 @@ Public Class FrmInputProdi
     End Sub
 #End Region
 
+#Region "Override Methods - Save Execution (Repository Pattern)"
+    ''' <summary>
+    ''' Eksekusi simpan menggunakan ProdiRepository.
+    ''' </summary>
+    Protected Overrides Function ExecuteSave() As Boolean
+        Dim repo As New ProdiRepository()
+        Dim prodi As New ProdiEntity()
+        prodi.Kode = txtKodeProdi.Text.Trim()
+        prodi.NamaProdi = txtNamaProdi.Text.Trim().ToUpper()
+
+        If IsEditMode Then
+            Return repo.Update(prodi)
+        Else
+            Return repo.Insert(prodi)
+        End If
+    End Function
+#End Region
+
 #Region "Override Methods - Validation"
     ''' <summary>
     ''' Validasi input sebelum save.
@@ -88,30 +106,8 @@ Public Class FrmInputProdi
     End Function
 #End Region
 
-#Region "Override Methods - Query"
-    ''' <summary>
-    ''' Query INSERT untuk Program Studi.
-    ''' </summary>
-    Protected Overrides Function GetInsertQuery() As String
-        Return "INSERT INTO tbl_prodi (kd_prodi, nama_prodi) VALUES (@kd_prodi, @nama_prodi)"
-    End Function
-
-    ''' <summary>
-    ''' Query UPDATE untuk Program Studi.
-    ''' </summary>
-    Protected Overrides Function GetUpdateQuery() As String
-        Return "UPDATE tbl_prodi SET nama_prodi = @nama_prodi WHERE kd_prodi = @kd_prodi"
-    End Function
-
-    ''' <summary>
-    ''' Parameter untuk query INSERT/UPDATE.
-    ''' </summary>
-    Protected Overrides Function GetQueryParameters() As MySqlParameter()
-        Return {
-            New MySqlParameter("@kd_prodi", txtKodeProdi.Text.Trim()),
-            New MySqlParameter("@nama_prodi", txtNamaProdi.Text.Trim().ToUpper())
-        }
-    End Function
+#Region "Override Methods - Query (Removed in favor of Repository)"
+    ' Logika SQL dipindahkan ke ProdiRepository.vb
 #End Region
 
 #Region "Override Methods - Form Reset"

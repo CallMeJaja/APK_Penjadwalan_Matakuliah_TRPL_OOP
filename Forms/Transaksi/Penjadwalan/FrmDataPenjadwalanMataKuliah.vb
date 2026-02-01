@@ -8,18 +8,27 @@ Public Class FrmDataPenjadwalanMataKuliah
     End Sub
 
 #Region "Override Properties"
+    ''' <summary>
+    ''' Nama tabel jadwal di database.
+    ''' </summary>
     Protected Overrides ReadOnly Property TableName As String
         Get
             Return "tbl_jadwal_matkul"
         End Get
     End Property
 
+    ''' <summary>
+    ''' Primary key (kd_pengampu) untuk data jadwal.
+    ''' </summary>
     Protected Overrides ReadOnly Property PrimaryKey As String
         Get
             Return "kd_pengampu"
         End Get
     End Property
 
+    ''' <summary>
+    ''' Nama modul penjadwalan.
+    ''' </summary>
     Protected Overrides ReadOnly Property ModuleName As String
         Get
             Return "Penjadwalan"
@@ -28,6 +37,9 @@ Public Class FrmDataPenjadwalanMataKuliah
 #End Region
 
 #Region "Initialization"
+    ''' <summary>
+    ''' Inisialisasi filter ComboBox untuk Prodi, Tipe Semester, Semester, dan Tahun Akademik.
+    ''' </summary>
     Protected Overrides Sub InitializeFilters()
         IsiComboBox(cmbFilterProdi, "SELECT kd_prodi, nama_prodi FROM tbl_prodi ORDER BY nama_prodi", "nama_prodi", "kd_prodi", "Semua Prodi")
 
@@ -52,70 +64,52 @@ Public Class FrmDataPenjadwalanMataKuliah
 #End Region
 
 #Region "Data Loading"
+#Region "Override Methods - Data Source (Repository Pattern)"
+    ''' <summary>
+    ''' Mengambil data melalui JadwalRepository dengan filter.
+    ''' </summary>
+    Protected Overrides Function GetDataTableFromSource() As DataTable
+        Dim repo As New JadwalRepository()
+        Return repo.GetAllWithFilters(
+            cmbFilterProdi.Text,
+            cmbFilterTipeSemester.Text,
+            cmbFilterSemester.Text,
+            cmbFilterTahun.Text,
+            txtCari.Text
+        )
+    End Function
+
+    ''' <summary>
+    ''' Eksekusi hapus menggunakan Repository.
+    ''' </summary>
+    Protected Overrides Function ExecuteDelete(recordId As String) As Boolean
+        ' Cek apakah baris ini memang sudah punya jadwal (jam_mulai not null)
+        If dgvData.CurrentRow IsNot Nothing Then
+            Dim jamMulai = dgvData.CurrentRow.Cells("jam_mulai").Value
+            If jamMulai Is DBNull.Value OrElse jamMulai Is Nothing Then
+                ShowWarning("Hanya data yang sudah memiliki jadwal yang dapat dihapus!")
+                Return False
+            End If
+        End If
+
+        Dim repo As New JadwalRepository()
+        ' recordId is kd_pengampu
+        Return repo.Delete(recordId)
+    End Function
+#End Region
+
+#Region "Override Methods"
+    ''' <summary>
+    ''' Load data penjadwalan.
+    ''' </summary>
     Public Overrides Sub LoadData()
-        Try
-            Cursor = Cursors.WaitCursor
-
-            Dim query As String = "SELECT p.kd_pengampu, p.tahun_akademik, h.nama_hari, " &
-                                "CASE WHEN (m.semester_matkul % 2) != 0 THEN 'GANJIL' ELSE 'GENAP' END AS tipe_smt, " &
-                                "j.jam_awal as jam_mulai, j.jam_akhir as jam_selesai, d.nama_dosen, " &
-                                "m.semester_matkul as smt, m.kd_matkul, m.nama_matkul, " &
-                                "m.sks_matkul, m.teori_matkul, m.praktek_matkul, r.nama_ruangan, pr.nama_prodi " &
-                                "FROM tbl_dosen_pengampu_matkul p " &
-                                "INNER JOIN tbl_matakuliah m ON p.kd_matkul = m.kd_matkul " &
-                                "INNER JOIN tbl_dosen d ON p.kd_dosen = d.kd_dosen " &
-                                "INNER JOIN tbl_prodi pr ON m.kd_prodi = pr.kd_prodi " &
-                                "LEFT JOIN tbl_jadwal_matkul j ON p.kd_pengampu = j.kd_pengampu " &
-                                "LEFT JOIN tbl_hari h ON j.id_hari = h.id_hari " &
-                                "LEFT JOIN tbl_ruangkelas r ON j.kd_ruangan = r.kd_ruangan " &
-                                "WHERE 1=1"
-
-            Dim params As New List(Of MySqlParameter)
-
-            If Not String.IsNullOrWhiteSpace(txtCari.Text) Then
-                query &= " AND (d.nama_dosen LIKE @search OR m.nama_matkul LIKE @search OR r.nama_ruangan LIKE @search)"
-                params.Add(New MySqlParameter("@search", $"%{txtCari.Text.Trim()}%"))
-            End If
-
-            If cmbFilterProdi.SelectedIndex > 0 Then
-                query &= " AND pr.nama_prodi = @prodi"
-                params.Add(New MySqlParameter("@prodi", cmbFilterProdi.Text))
-            End If
-
-            If cmbFilterTipeSemester.SelectedIndex = 1 Then
-                query &= " AND m.semester_matkul MOD 2 <> 0"
-            ElseIf cmbFilterTipeSemester.SelectedIndex = 2 Then
-                query &= " AND m.semester_matkul MOD 2 = 0"
-            End If
-
-            If cmbFilterSemester.SelectedIndex > 0 Then
-                query &= " AND m.semester_matkul = @semester"
-                params.Add(New MySqlParameter("@semester", cmbFilterSemester.Text))
-            End If
-
-            If cmbFilterTahun.SelectedIndex > 0 Then
-                query &= " AND p.tahun_akademik = @tahun"
-                params.Add(New MySqlParameter("@tahun", cmbFilterTahun.Text))
-            End If
-
-            query &= " ORDER BY p.tahun_akademik DESC, h.nama_hari, j.jam_awal ASC"
-
-            _dataSource = ModDbCrud.LoadDataWithParams(query, params.ToArray())
-            
-            If _dataSource IsNot Nothing Then
-                _totalRecords = _dataSource.Rows.Count
-                ApplyFilter()
-            Else
-                ClearDataGrid()
-            End If
-
-        Catch ex As Exception
-            ShowError($"Gagal memuat data jadwal: {ex.Message}")
-        Finally
-            Cursor = Cursors.Default
-        End Try
+        ' Gunakan implementasi base yang memanggil GetDataTableFromSource
+        MyBase.LoadData()
     End Sub
 
+    ''' <summary>
+    ''' Buka form input dengan logika deteksi jadwal baru atau edit.
+    ''' </summary>
     Protected Overrides Sub OpenInputForm(isEditMode As Boolean, recordId As String)
         If dgvData.CurrentRow IsNot Nothing Then
             Dim jamMulai = dgvData.CurrentRow.Cells("jam_mulai").Value
@@ -126,13 +120,19 @@ Public Class FrmDataPenjadwalanMataKuliah
         End If
     End Sub
 
+    ''' <summary>
+    ''' Buat instance form input Penjadwalan.
+    ''' </summary>
     Protected Overrides Function CreateInputForm() As FrmBaseInput
         Return New FrmInputPenjadwalanMataKuliah()
     End Function
 
+    ''' <summary>
+    ''' Konfigurasi detail kolom DataGridView untuk Penjadwalan.
+    ''' </summary>
     Protected Overrides Sub ConfigureGridColumns()
         MyBase.ConfigureGridColumns()
-
+        ' ... rest of code unchanged ...
         With dgvData
             If .ColumnCount > 0 Then
                 If .Columns.Contains("kd_pengampu") Then
@@ -233,9 +233,13 @@ Public Class FrmDataPenjadwalanMataKuliah
                 End If
 
                 If .Columns.Contains("nama_prodi") Then .Columns("nama_prodi").Visible = False
+                If .Columns.Contains("id_hari") Then .Columns("id_hari").Visible = False
+                If .Columns.Contains("kd_ruangan") Then .Columns("kd_ruangan").Visible = False
+                If .Columns.Contains("kd_prodi") Then .Columns("kd_prodi").Visible = False
             End If
         End With
     End Sub
+#End Region
 
     ''' <summary>
     ''' Memberikan warna soft merah pada baris yang belum memiliki jadwal.

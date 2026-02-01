@@ -287,14 +287,6 @@
     <Compile Include="Entities\PengampuEntity.vb" />
     <Compile Include="Entities\JadwalEntity.vb" />
     <!-- Repository Classes (OOP) -->
-    <Compile Include="Repositories\IRepository.vb" />
-    <Compile Include="Repositories\RepositoryBase.vb" />
-    <Compile Include="Repositories\DosenRepository.vb" />
-    <Compile Include="Repositories\MatakuliahRepository.vb" />
-    <Compile Include="Repositories\ProdiRepository.vb" />
-    <Compile Include="Repositories\RuangkelasRepository.vb" />
-    <Compile Include="Repositories\HariRepository.vb" />
-    <Compile Include="Repositories\UserRepository.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
@@ -339,6 +331,16 @@
       <SubType>Component</SubType>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Compile>
+    <Compile Include="Repositories\DosenPengampuRepository.vb" />
+    <Compile Include="Repositories\DosenRepository.vb" />
+    <Compile Include="Repositories\HariRepository.vb" />
+    <Compile Include="Repositories\IRepository.vb" />
+    <Compile Include="Repositories\JadwalRepository.vb" />
+    <Compile Include="Repositories\MatakuliahRepository.vb" />
+    <Compile Include="Repositories\ProdiRepository.vb" />
+    <Compile Include="Repositories\RepositoryBase.vb" />
+    <Compile Include="Repositories\RuangkelasRepository.vb" />
+    <Compile Include="Repositories\UserRepository.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Forms\FrmBaseData.resx">
@@ -438,7 +440,6 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <None Include="APK_Penjadwalan_Matakuliah_TRPL_TemporaryKey.pfx" />
     <None Include="My Project\Application.myapp">
       <Generator>MyApplicationCodeGenerator</Generator>
       <LastGenOutput>Application.Designer.vb</LastGenOutput>
@@ -449,12 +450,12 @@
       <LastGenOutput>Settings.Designer.vb</LastGenOutput>
     </None>
     <None Include="App.config" />
-    <None Include="soal-uas-pbo.md" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{C0C07587-41A7-46C8-8FBD-3F9C8EBE2DDC}" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Repositories\README.md" />
     <None Include="Resources\Politeknik-Enjinering-Indorama-nobg.JPG" />
   </ItemGroup>
   <ItemGroup>
@@ -558,6 +559,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include=".gitignore" />
+    <Content Include="Database\db_penjadwalan.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\add-line.png" />

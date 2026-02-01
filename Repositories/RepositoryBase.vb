@@ -62,7 +62,7 @@ Public MustInherit Class RepositoryBase(Of T As Class)
         Dim result As New List(Of T)
 
         Try
-            Dim dt As DataTable = LoadData(GetSelectQuery())
+            Dim dt As DataTable = GetAllDataTable()
             If dt IsNot Nothing Then
                 For Each row As DataRow In dt.Rows
                     result.Add(MapToEntity(row))
@@ -73,6 +73,14 @@ Public MustInherit Class RepositoryBase(Of T As Class)
         End Try
 
         Return result
+    End Function
+
+    ''' <summary>
+    ''' Mendapatkan semua data dalam bentuk DataTable untuk keperluan UI (Filter/Paging).
+    ''' </summary>
+    ''' <returns>DataTable berisi semua data dari query SELECT.</returns>
+    Public Overridable Function GetAllDataTable() As DataTable
+        Return LoadData(GetSelectQuery())
     End Function
 
     ''' <summary>
