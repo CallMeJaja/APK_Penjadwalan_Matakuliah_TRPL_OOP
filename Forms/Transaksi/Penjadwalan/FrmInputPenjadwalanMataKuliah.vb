@@ -1,3 +1,4 @@
+Imports MySql.Data.MySqlClient
 ''' <summary>
 ''' Form input untuk data Penjadwalan Mata Kuliah.
 ''' Menangani mode tambah dan ubah jadwal dengan integrasi JadwalRepository.
@@ -303,7 +304,7 @@ Public Class FrmInputPenjadwalanMataKuliah
                             "WHERE j.kd_ruangan = @ruang AND j.id_hari = @hari " &
                             "AND p.tahun_akademik = @tahun " &
                             "AND ((j.jam_awal < @akhir AND j.jam_akhir > @awal))"
-        
+
         Dim params As MySqlParameter() = {
             New MySqlParameter("@ruang", cmbRuangan.SelectedValue),
             New MySqlParameter("@hari", cmbHari.SelectedValue),
@@ -374,9 +375,9 @@ Public Class FrmInputPenjadwalanMataKuliah
         j.Kode = _kdPengampu
         j.IdHari = _idHari
         j.KdRuangan = _idRuangan
-        j.JamAwal = dtpJamMulai.Value.TimeOfDay 
+        j.JamAwal = dtpJamMulai.Value.TimeOfDay
         j.JamAkhir = dtpJamSelesai.Value.TimeOfDay
-        
+
         If repo.IsBentrok(j) Then
             Return False
         End If

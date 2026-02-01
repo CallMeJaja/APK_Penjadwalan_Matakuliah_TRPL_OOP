@@ -1,4 +1,5 @@
-﻿''' <summary>
+﻿Imports MySql.Data.MySqlClient
+''' <summary>
 ''' Form Lookup untuk memilih data dari tabel database mana pun secara dinamis.
 ''' Mendukung pencarian teks pada beberapa kolom sekaligus.
 ''' </summary>
@@ -106,10 +107,10 @@ Public Class FrmLookup
     Private Sub PilihData()
         If DataGridView1.CurrentRow IsNot Nothing Then
             Dim row As DataRowView = CType(DataGridView1.CurrentRow.DataBoundItem, DataRowView)
-            
+
             SelectedRow = row
             SelectedValue = row(_returnColumn).ToString()
-            
+
             Me.DialogResult = DialogResult.OK
             Me.Close()
         End If
