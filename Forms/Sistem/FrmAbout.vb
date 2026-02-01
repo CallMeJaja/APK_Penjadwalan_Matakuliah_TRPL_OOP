@@ -16,7 +16,12 @@
         Me.LabelVersion.Text = String.Format("Version {0}", My.Application.Info.Version.ToString)
         Me.LabelCopyright.Text = My.Application.Info.Copyright
         Me.LabelCompanyName.Text = My.Application.Info.CompanyName
-        Me.TextBoxDescription.Text = My.Application.Info.Description
+        Me.TextBoxDescription.Text = My.Application.Info.Description & Environment.NewLine & Environment.NewLine &
+            "Kelompok 4:" & Environment.NewLine &
+            "- Intan Sri Dayanti (202404007)" & Environment.NewLine &
+            "- Muhamad Gilang Ramadan (202404008)" & Environment.NewLine &
+            "- Reza Asriano Maulana (202404021)" & Environment.NewLine &
+            "- Zahra Ayu Trisna (202404019)"
     End Sub
 
     Private Sub OKButton_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles OKButton.Click

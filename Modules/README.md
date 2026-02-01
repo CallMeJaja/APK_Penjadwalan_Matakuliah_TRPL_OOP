@@ -37,10 +37,10 @@ Helper untuk operasi database:
 ### ModAutoId.vb
 Generate ID otomatis untuk setiap tabel:
 ```vb
-Public Function GenerateKdDosen() As String      ' Format: DSNXXXX
-Public Function GenerateKdMatakuliah() As String ' Format: MTKXXXX
+Public Function GenerateKdDosen() As String      ' Format: 13XXXX (Numeric)
+Public Function GenerateKdMatakuliah() As String ' Format: TRPLXXX / MKUXXX (Alphanumeric)
 Public Function GenerateKdPengampu() As String   ' Format: PMKXXXX
-Public Function GenerateIdJadwal() As String     ' Format: JDLXXXX
+' Catatan: Jadwal menggunakan kd_pengampu sebagai Primary Key
 ```
 
 ### ModValidasi.vb

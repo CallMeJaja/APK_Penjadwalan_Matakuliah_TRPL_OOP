@@ -19,6 +19,7 @@ Folder ini berisi **Crystal Reports** untuk cetak laporan aplikasi.
 
 ### rptDosen
 **Laporan Data Dosen**
+- Source: `vw_plotting_dosen` / `tbl_dosen`
 - Parameter: `prmProdi` (filter program studi)
 - Kolom: Kode Dosen, Nama, NIP, Email, Telepon, Prodi
 
@@ -29,13 +30,25 @@ Folder ini berisi **Crystal Reports** untuk cetak laporan aplikasi.
 
 ### rptDosenPengampu
 **Laporan Dosen Pengampu Matakuliah**
+- Source: `vw_plotting_dosen`
 - Parameter: `prmProdi`, `prmTahunAkademik`
 - Kolom: Kode Pengampu, Nama Dosen, Matakuliah, Kelas
 
 ### rptJadwalMatkul
 **Laporan Jadwal Kuliah**
+- Source: `vw_jadwal_cetak`
 - Parameter: `prmProdi`, `prmSemester`, `prmTahunAkademik`, `prmJenisKelas`
 - Kolom: Hari, Jam, Matakuliah, Dosen, Ruangan, Kelas
+
+## 🔍 Database Views
+
+Sistem menggunakan SQL Views untuk mempermudah pengambilan data yang kompleks:
+
+1. **vw_jadwal_cetak**
+   Menggabungkan jadwal, pengampu, matakuliah, dosen, hari, ruangan, dan prodi. Digunakan oleh `rptJadwalMatkul`.
+
+2. **vw_plotting_dosen**
+   Menggabungkan data dosen, pengampu, dan matakuliah. Digunakan untuk analisis beban kerja dosen dan laporan pengampu.
 
 ## ⚙️ Cara Modifikasi Report
 

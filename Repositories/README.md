@@ -71,11 +71,11 @@ Dim repo As New DosenRepository()
 Dim listDosen = repo.GetAll()
 
 ' Get by id
-Dim dosen = repo.GetById("DSN0001")
+Dim dosen = repo.GetById("130001")
 
 ' Insert
 Dim newDosen As New DosenEntity()
-newDosen.KdDosen = "DSN0002"
+newDosen.KdDosen = "139999"
 newDosen.NamaDosen = "Dr. Budi"
 repo.Insert(newDosen)
 
@@ -84,7 +84,7 @@ dosen.NamaDosen = "Dr. Budi Santoso"
 repo.Update(dosen)
 
 ' Delete
-repo.Delete("DSN0002")
+repo.Delete("139999")
 ```
 
 ## 🔗 Terkait
